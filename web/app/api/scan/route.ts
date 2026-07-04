@@ -8,12 +8,21 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
+      service: "PayGuard",
+      version: "0.1.0",
+      requestId: body.requestId ?? `payguard_scan_${Date.now()}`,
+      status: "completed",
+      canContinue: report.decision === "ALLOW",
       report,
     });
   } catch {
     return NextResponse.json(
       {
         ok: false,
+        service: "PayGuard",
+        version: "0.1.0",
+        status: "failed",
+        canContinue: false,
         error: "Scan failed",
       },
       { status: 400 },

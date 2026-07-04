@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,52 @@ import { ReportCard } from "@/components/ui/ReportCard";
 import { Shell } from "@/components/ui/Shell";
 import type { Report } from "@/components/ui/ReportCard";
 
+const DEMO_PRESETS = [
+  {
+    label: "Safe transfer",
+    input: {
+      chain: "base",
+      walletAddress: "0x1111111111111111111111111111111111111111",
+      targetAddress: "0x2222222222222222222222222222222222222222",
+      transactionData:
+        "0xa9059cbb00000000000000000000000033333333333333333333333333333333333333330000000000000000000000000000000000000000000000000000000000000064",
+      purpose: "Send 100 tokens to a known recipient",
+    },
+  },
+  {
+    label: "Risky approval",
+    input: {
+      chain: "base",
+      walletAddress: "0x1111111111111111111111111111111111111111",
+      targetAddress: "0x4444444444444444444444444444444444444444",
+      transactionData:
+        "0x095ea7b30000000000000000000000005555555555555555555555555555555555555555ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      purpose: "Approve token spend before paying an agent",
+    },
+  },
+  {
+    label: "Invalid recipient",
+    input: {
+      chain: "base",
+      walletAddress: "0x1111111111111111111111111111111111111111",
+      targetAddress: "not an address",
+      transactionData: "",
+      purpose: "Pay another agent",
+    },
+  },
+  {
+    label: "Unknown contract call",
+    input: {
+      chain: "base",
+      walletAddress: "0x1111111111111111111111111111111111111111",
+      targetAddress: "0x6666666666666666666666666666666666666666",
+      transactionData:
+        "0x123456780000000000000000000000007777777777777777777777777777777777777777",
+      purpose: "Execute an unknown contract action",
+    },
+  },
+];
+
 export default function ScanPage() {
   const [chain, setChain] = useState("base");
   const [walletAddress, setWalletAddress] = useState("");
@@ -20,7 +66,16 @@ export default function ScanPage() {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function scan(event: React.FormEvent<HTMLFormElement>) {
+  function applyPreset(preset: (typeof DEMO_PRESETS)[number]) {
+    setChain(preset.input.chain);
+    setWalletAddress(preset.input.walletAddress);
+    setTargetAddress(preset.input.targetAddress);
+    setTransactionData(preset.input.transactionData);
+    setPurpose(preset.input.purpose);
+    setReport(null);
+  }
+
+  async function scan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setReport(null);
@@ -72,11 +127,13 @@ export default function ScanPage() {
               <Motion variant="fadeUp" delay="100">
                 <MiniStat title="Base first" text="Focused EVM safety" />
               </Motion>
+
               <Motion variant="fadeUp" delay="200">
                 <MiniStat title="Fast verdict" text="Clear decision" />
               </Motion>
+
               <Motion variant="fadeUp" delay="300">
-                <MiniStat title="Agent ready" text="CAP compatible" />
+                <MiniStat title="Agent ready" text="CROO compatible" />
               </Motion>
             </div>
           </Card>
@@ -95,6 +152,7 @@ export default function ScanPage() {
                   <p className="text-xs font-black uppercase tracking-[0.28em] text-muted">
                     safety request
                   </p>
+
                   <h2 className="mt-3 text-3xl font-black tracking-[-0.05em]">
                     Payment review
                   </h2>
@@ -105,7 +163,26 @@ export default function ScanPage() {
                 </div>
               </div>
 
-              <div className="relative mt-7 grid gap-4">
+              <div className="relative mt-7 grid gap-3 sm:grid-cols-2">
+                {DEMO_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    className="rounded-3xl border border-line bg-canvas p-4 text-left transition hover:-translate-y-1 hover:bg-paper-soft"
+                  >
+                    <p className="text-sm font-black tracking-[-0.03em]">
+                      {preset.label}
+                    </p>
+
+                    <p className="mt-1 text-xs font-bold text-muted">
+                      Load demo scan input
+                    </p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative mt-5 grid gap-4">
                 <Motion variant="fadeUp" delay="100">
                   <SelectInput
                     label="Chain"
