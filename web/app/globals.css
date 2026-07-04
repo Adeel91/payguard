@@ -56,45 +56,106 @@ body {
   box-shadow: var(--shadow);
 }
 
-@keyframes fadeUp {
+@keyframes motionFadeUp {
   from {
     opacity: 0;
-    transform: translateY(22px);
+    transform: translateY(28px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes floatSoft {
+@keyframes motionFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motionSlideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motionSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motionFloat {
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
   }
 
   50% {
-    transform: translateY(-10px) rotate(1deg);
+    transform: translateY(-14px) rotate(1deg);
   }
 }
 
-@keyframes pulseSoft {
+@keyframes motionFloatSlow {
   0%,
   100% {
-    opacity: 0.7;
-    transform: scale(1);
+    transform: translateY(0) rotate(-1deg);
   }
 
   50% {
-    opacity: 1;
-    transform: scale(1.08);
+    transform: translateY(-20px) rotate(1deg);
   }
 }
 
-@keyframes scanLine {
+@keyframes motionBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.78;
+  }
+
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes motionScan {
   0% {
-    transform: translateY(-100%);
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translateY(560%);
+    opacity: 0;
+  }
+}
+
+@keyframes motionPath {
+  0% {
+    transform: translateX(-18%);
     opacity: 0;
   }
 
@@ -103,58 +164,127 @@ body {
   }
 
   100% {
-    transform: translateY(420%);
+    transform: translateX(118%);
     opacity: 0;
   }
 }
 
-@keyframes glowRing {
+@keyframes motionOrbOne {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(79, 159, 114, 0.22);
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
   }
 
   50% {
-    box-shadow: 0 0 0 10px rgba(79, 159, 114, 0);
+    transform: translate3d(42px, 26px, 0) scale(1.08);
+    opacity: 1;
   }
 }
 
-.animate-fade-up {
-  animation: fadeUp 700ms ease both;
+@keyframes motionOrbTwo {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.65;
+  }
+
+  50% {
+    transform: translate3d(-48px, 34px, 0) scale(1.06);
+    opacity: 0.95;
+  }
 }
 
-.animate-fade-up-slow {
-  animation: fadeUp 950ms ease both;
+@keyframes motionOrbThree {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate3d(30px, -38px, 0) scale(1.12);
+    opacity: 0.85;
+  }
 }
 
-.animate-float-soft {
-  animation: floatSoft 5s ease-in-out infinite;
+.motion-fade-up {
+  animation: motionFadeUp 760ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.animate-pulse-soft {
-  animation: pulseSoft 2.8s ease-in-out infinite;
+.motion-fade-in {
+  animation: motionFadeIn 900ms ease both;
 }
 
-.animate-scan-line {
-  animation: scanLine 2.6s ease-in-out infinite;
+.motion-slide-left {
+  animation: motionSlideLeft 780ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.animate-glow-ring {
-  animation: glowRing 2.4s ease-in-out infinite;
+.motion-slide-right {
+  animation: motionSlideRight 780ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.delay-100 {
+.motion-float {
+  animation: motionFloat 5.5s ease-in-out infinite;
+}
+
+.motion-float-slow {
+  animation: motionFloatSlow 7s ease-in-out infinite;
+}
+
+.motion-breathe {
+  animation: motionBreathe 3.2s ease-in-out infinite;
+}
+
+.motion-scan {
+  animation: motionScan 2.8s ease-in-out infinite;
+}
+
+.motion-path {
+  animation: motionPath 2.6s ease-in-out infinite;
+}
+
+.motion-orb-one {
+  animation: motionOrbOne 9s ease-in-out infinite;
+}
+
+.motion-orb-two {
+  animation: motionOrbTwo 11s ease-in-out infinite;
+}
+
+.motion-orb-three {
+  animation: motionOrbThree 12s ease-in-out infinite;
+}
+
+.motion-delay-100 {
   animation-delay: 100ms;
 }
 
-.delay-200 {
+.motion-delay-200 {
   animation-delay: 200ms;
 }
 
-.delay-300 {
+.motion-delay-300 {
   animation-delay: 300ms;
 }
 
-.delay-400 {
+.motion-delay-400 {
   animation-delay: 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-fade-up,
+  .motion-fade-in,
+  .motion-slide-left,
+  .motion-slide-right,
+  .motion-float,
+  .motion-float-slow,
+  .motion-breathe,
+  .motion-scan,
+  .motion-path,
+  .motion-orb-one,
+  .motion-orb-two,
+  .motion-orb-three {
+    animation: none;
+  }
 }

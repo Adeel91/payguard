@@ -1,4 +1,9 @@
-import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { Badge } from "@/components/ui/Badge";
+import { ButtonLink } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Motion } from "@/components/ui/Motion";
+import { Shell } from "@/components/ui/Shell";
 
 const checks = [
   "Recipient",
@@ -27,52 +32,39 @@ const steps = [
   },
 ];
 
+const reviewRows = [
+  ["Action", "Token approval"],
+  ["Recipient", "Unknown contract"],
+  ["Impact", "Assets may move later"],
+  ["Next", "Do not sign"],
+];
+
+const infoCards = [
+  {
+    title: "For users",
+    text: "Paste a transaction or approval and get a plain language safety decision before signing.",
+  },
+  {
+    title: "For agents",
+    text: "A CROO buyer agent hires PayGuard before sending USDC or executing an on chain action.",
+  },
+  {
+    title: "For CROO",
+    text: "PayGuard becomes a paid safety dependency for agent commerce, wallets, DeFi agents, and marketplace flows.",
+  },
+];
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-canvas">
-      <div className="mx-auto max-w-7xl px-5 py-5 sm:px-8">
-        <header className="animate-fade-up flex items-center justify-between rounded-[2rem] border border-line bg-paper px-5 py-4 brand-shadow">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-ink text-sm font-black text-paper">
-              PG
-            </div>
+    <Shell>
+      <SiteHeader />
 
-            <div>
-              <p className="text-lg font-black leading-none tracking-[-0.03em]">
-                PayGuard
-              </p>
-              <p className="mt-1 text-xs font-bold text-muted">
-                payment permission agent
-              </p>
-            </div>
-          </Link>
+      <section className="grid gap-8 py-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-stretch lg:py-16">
+        <Motion variant="slideRight">
+          <Card className="relative overflow-hidden sm:p-10 lg:p-12">
+            <div className="absolute right-8 top-8 hidden h-24 w-24 rounded-full bg-blue-soft opacity-70 blur-2xl sm:block" />
 
-          <nav className="hidden items-center gap-6 text-sm font-bold text-muted md:flex">
-            <a href="#review" className="hover:text-ink">
-              Review
-            </a>
-            <a href="#flow" className="hover:text-ink">
-              Flow
-            </a>
-            <a href="#croo" className="hover:text-ink">
-              CROO
-            </a>
-          </nav>
-
-          <Link
-            href="/scan"
-            className="rounded-full bg-ink px-5 py-3 text-sm font-black text-paper transition hover:scale-[1.02]"
-          >
-            Open scanner
-          </Link>
-        </header>
-
-        <section className="grid gap-8 py-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-stretch lg:py-16">
-          <div className="animate-fade-up-slow rounded-[3rem] border border-line bg-paper p-8 brand-shadow sm:p-10 lg:p-12">
-            <div className="inline-flex animate-glow-ring items-center gap-3 rounded-full bg-green-soft px-4 py-2 text-sm font-black text-green">
-              <span className="h-2.5 w-2.5 rounded-full bg-green" />
-              checks before funds move
-            </div>
+            <Badge tone="green">checks before funds move</Badge>
 
             <h1 className="mt-10 max-w-3xl text-6xl font-black leading-[0.9] tracking-[-0.07em] sm:text-7xl lg:text-8xl">
               Your wallet should ask first.
@@ -85,101 +77,139 @@ export default function Home() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/scan"
-                className="rounded-full bg-ink px-7 py-4 text-center font-black text-paper transition hover:scale-[1.02]"
-              >
-                Scan a payment
-              </Link>
-
-              <a
-                href="#flow"
-                className="rounded-full border border-line bg-canvas px-7 py-4 text-center font-black text-ink transition hover:bg-paper-soft"
-              >
+              <ButtonLink href="/scan">Scan a payment</ButtonLink>
+              <ButtonLink href="#flow" variant="secondary">
                 See how it works
-              </a>
+              </ButtonLink>
             </div>
 
             <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {checks.map((check) => (
-                <div
+              {checks.map((check, index) => (
+                <Motion
                   key={check}
-                  className="rounded-3xl border border-line bg-canvas px-4 py-4 text-sm font-black text-muted"
+                  variant="fadeUp"
+                  delay={
+                    index === 0
+                      ? "100"
+                      : index === 1
+                        ? "200"
+                        : index === 2
+                          ? "300"
+                          : "400"
+                  }
                 >
-                  {check}
-                </div>
+                  <div className="rounded-3xl border border-line bg-canvas px-4 py-4 text-sm font-black text-muted transition hover:-translate-y-1 hover:bg-paper-soft hover:text-ink">
+                    {check}
+                  </div>
+                </Motion>
               ))}
             </div>
-          </div>
+          </Card>
+        </Motion>
 
+        <Motion variant="slideLeft" delay="100">
           <div
             id="review"
-            className="animate-float-soft grid gap-5 rounded-[3rem] border border-line bg-paper-soft p-5 brand-shadow"
+            className="relative grid min-h-full gap-5 rounded-[3rem] border border-line bg-paper-soft p-5 brand-shadow"
           >
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-paper p-6">
-              <div className="pointer-events-none absolute left-0 right-0 top-0 h-16 animate-scan-line bg-gradient-to-b from-blue-soft/0 via-blue-soft to-blue-soft/0 opacity-60" />
+            <Motion variant="floatSlow">
+              <div className="relative overflow-hidden rounded-[2.5rem] bg-paper p-6">
+                <div className="pointer-events-none absolute left-0 right-0 top-0 h-16 motion-scan bg-gradient-to-b from-blue-soft/0 via-blue-soft to-blue-soft/0 opacity-70" />
 
-              <div className="relative flex items-start justify-between gap-6">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.28em] text-muted">
-                    payment review
-                  </p>
-                  <h2 className="mt-5 text-5xl font-black tracking-[-0.06em] text-red">
-                    Block
-                  </h2>
+                <div className="relative flex items-start justify-between gap-6">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.28em] text-muted">
+                      live payment review
+                    </p>
+                    <h2 className="mt-5 text-5xl font-black tracking-[-0.06em] text-red">
+                      Block
+                    </h2>
+                  </div>
+
+                  <div className="motion-breathe grid h-24 w-24 place-items-center rounded-[2rem] bg-red-soft text-center">
+                    <div>
+                      <p className="text-xs font-black uppercase text-red">risk</p>
+                      <p className="text-3xl font-black text-red">91</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid h-24 w-24 place-items-center rounded-[2rem] bg-red-soft text-center">
-                  <div>
-                    <p className="text-xs font-black uppercase text-red">risk</p>
-                    <p className="text-3xl font-black text-red">91</p>
+                <div className="relative mt-7 rounded-[2rem] bg-red-soft p-5">
+                  <p className="text-lg font-black text-red">
+                    Unknown spender wants token permission
+                  </p>
+                  <p className="mt-3 leading-7 text-muted">
+                    This action may allow another contract to move assets from the wallet
+                    later. PayGuard recommends stopping until the spender is verified.
+                  </p>
+                </div>
+
+                <div className="relative mt-5 grid gap-3">
+                  {reviewRows.map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between gap-4 rounded-3xl bg-canvas px-5 py-4"
+                    >
+                      <span className="text-sm font-black text-muted">{label}</span>
+                      <span className="text-sm font-black text-ink">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Motion>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <DecisionMini title="Allow" text="Continue safely" tone="green" />
+              <DecisionMini title="Warn" text="Review first" tone="orange" />
+              <DecisionMini title="Block" text="Stop action" tone="red" />
+            </div>
+          </div>
+        </Motion>
+      </section>
+
+      <Motion variant="fadeUp" delay="200">
+        <section className="py-4">
+          <Card className="overflow-hidden p-5">
+            <div className="relative grid gap-4 rounded-[2.4rem] bg-paper-soft p-5 md:grid-cols-[1fr_1.2fr_1fr] md:items-center">
+              <div className="rounded-[2rem] bg-paper p-5">
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-muted">
+                  source
+                </p>
+                <p className="mt-3 text-2xl font-black tracking-[-0.04em]">Wallet</p>
+                <p className="mt-2 text-sm font-bold text-muted">
+                  Payment or approval prepared
+                </p>
+              </div>
+
+              <div className="relative h-24 overflow-hidden rounded-[2rem] border border-line bg-canvas">
+                <div className="absolute left-6 right-6 top-1/2 h-1 -translate-y-1/2 rounded-full bg-line" />
+                <div className="absolute top-1/2 h-5 w-16 -translate-y-1/2 rounded-full bg-blue motion-path" />
+                <div className="absolute inset-0 grid place-items-center">
+                  <div className="rounded-full bg-paper px-5 py-3 text-sm font-black text-blue brand-shadow">
+                    PayGuard checks first
                   </div>
                 </div>
               </div>
 
-              <div className="relative mt-7 rounded-[2rem] bg-red-soft p-5">
-                <p className="text-lg font-black text-red">
-                  Unknown spender wants token permission
+              <div className="rounded-[2rem] bg-paper p-5">
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-muted">
+                  result
                 </p>
-                <p className="mt-3 leading-7 text-muted">
-                  This action may allow another contract to move assets from the wallet
-                  later. PayGuard recommends stopping until the spender is verified.
+                <p className="mt-3 text-2xl font-black tracking-[-0.04em]">
+                  Allow, Warn, Block
+                </p>
+                <p className="mt-2 text-sm font-bold text-muted">
+                  Decision returned before signing
                 </p>
               </div>
-
-              <div className="relative mt-5 grid gap-3">
-                <ReviewRow label="Action" value="Token approval" />
-                <ReviewRow label="Recipient" value="Unknown contract" />
-                <ReviewRow label="Impact" value="Assets may move later" />
-                <ReviewRow label="Next" value="Do not sign" />
-              </div>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MiniCard
-                title="Allow"
-                text="Continue safely"
-                tone="green"
-                className="animate-fade-up delay-100"
-              />
-              <MiniCard
-                title="Warn"
-                text="Review first"
-                tone="orange"
-                className="animate-fade-up delay-200"
-              />
-              <MiniCard
-                title="Block"
-                text="Stop action"
-                tone="red"
-                className="animate-fade-up delay-300"
-              />
-            </div>
-          </div>
+          </Card>
         </section>
+      </Motion>
 
-        <section id="flow" className="grid gap-5 py-8 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="animate-fade-up rounded-[3rem] bg-ink p-8 text-paper sm:p-10">
+      <section id="flow" className="grid gap-5 py-10 lg:grid-cols-[0.8fr_1.2fr]">
+        <Motion variant="slideRight">
+          <div className="rounded-[3rem] bg-ink p-8 text-paper sm:p-10">
             <p className="text-xs font-black uppercase tracking-[0.28em] text-paper/45">
               the product
             </p>
@@ -191,15 +221,16 @@ export default function Home() {
               the mistake by checking before the signature happens.
             </p>
           </div>
+        </Motion>
 
-          <div className="grid gap-4">
-            {steps.map((step, index) => (
-              <div
-                key={step.number}
-                className={`animate-fade-up grid gap-5 rounded-[2.5rem] border border-line bg-paper p-6 sm:grid-cols-[4rem_1fr] ${
-                  index === 0 ? "delay-100" : index === 1 ? "delay-200" : "delay-300"
-                }`}
-              >
+        <div className="grid gap-4">
+          {steps.map((step, index) => (
+            <Motion
+              key={step.number}
+              variant="slideLeft"
+              delay={index === 0 ? "100" : index === 1 ? "200" : "300"}
+            >
+              <div className="grid gap-5 rounded-[2.5rem] border border-line bg-paper p-6 transition hover:-translate-y-1 sm:grid-cols-[4rem_1fr]">
                 <div className="grid h-16 w-16 place-items-center rounded-[1.5rem] bg-blue-soft text-2xl font-black text-blue">
                   {step.number}
                 </div>
@@ -209,69 +240,48 @@ export default function Home() {
                   <p className="mt-2 leading-7 text-muted">{step.text}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </Motion>
+          ))}
+        </div>
+      </section>
 
-        <section id="croo" className="grid gap-5 py-10 lg:grid-cols-3">
-          <InfoCard
-            title="For users"
-            text="Paste a transaction or approval and get a plain language safety decision before signing."
-          />
-          <InfoCard
-            title="For agents"
-            text="A CROO buyer agent hires PayGuard before sending USDC or executing an on chain action."
-          />
-          <InfoCard
-            title="For CROO"
-            text="PayGuard becomes a paid safety dependency for agent commerce, wallets, DeFi agents, and marketplace flows."
-          />
-        </section>
-      </div>
-    </main>
+      <section id="croo" className="grid gap-5 py-10 lg:grid-cols-3">
+        {infoCards.map((card, index) => (
+          <Motion
+            key={card.title}
+            variant="fadeUp"
+            delay={index === 0 ? "100" : index === 1 ? "200" : "300"}
+          >
+            <Card className="h-full transition hover:-translate-y-1 hover:bg-paper-soft">
+              <h3 className="text-3xl font-black tracking-[-0.05em]">{card.title}</h3>
+              <p className="mt-4 leading-7 text-muted">{card.text}</p>
+            </Card>
+          </Motion>
+        ))}
+      </section>
+    </Shell>
   );
 }
 
-function ReviewRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-3xl bg-canvas px-5 py-4">
-      <span className="text-sm font-black text-muted">{label}</span>
-      <span className="text-sm font-black text-ink">{value}</span>
-    </div>
-  );
-}
-
-function MiniCard({
+function DecisionMini({
   title,
   text,
   tone,
-  className = "",
 }: {
   title: string;
   text: string;
   tone: "green" | "orange" | "red";
-  className?: string;
 }) {
-  const toneClass =
-    tone === "green"
-      ? "bg-green-soft text-green"
-      : tone === "orange"
-        ? "bg-orange-soft text-orange"
-        : "bg-red-soft text-red";
+  const toneClass = {
+    green: "bg-green-soft text-green",
+    orange: "bg-orange-soft text-orange",
+    red: "bg-red-soft text-red",
+  }[tone];
 
   return (
-    <div className={`rounded-[2rem] p-5 ${toneClass} ${className}`}>
+    <div className={`rounded-[2rem] p-5 ${toneClass}`}>
       <p className="text-xl font-black">{title}</p>
       <p className="mt-2 text-sm font-bold opacity-70">{text}</p>
-    </div>
-  );
-}
-
-function InfoCard({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="animate-fade-up rounded-[3rem] border border-line bg-paper p-8">
-      <h3 className="text-3xl font-black tracking-[-0.05em]">{title}</h3>
-      <p className="mt-4 leading-7 text-muted">{text}</p>
     </div>
   );
 }
