@@ -3,6 +3,10 @@ import { decodeAction } from "../protocols/decoder";
 import { buildPolicyChecks } from "../policy/checks";
 import { getDecision, getRiskLevel, scoreChecks } from "../policy/scoring";
 import { analyzeProtocol } from "../protocols/registry";
+import {
+  buildContractIntelligenceChecks,
+  collectContractIntelligence,
+} from "../intelligence/contract";
 import type {
   PayGuardDecision,
   PayGuardReport,
@@ -57,13 +61,20 @@ export async function buildReport(
   assertValidInput(input);
 
   const decodedAction = decodeAction(input.transactionData);
-  const chainEvidence = await collectChainEvidence(input, decodedAction, options);
+
+  const [chainEvidence, contractIntelligence] = await Promise.all([
+    collectChainEvidence(input, decodedAction, options),
+    collectContractIntelligence(input, options),
+  ]);
+
   const protocol = analyzeProtocol(decodedAction, chainEvidence);
 
-const policyChecks = [
-  ...buildPolicyChecks(decodedAction, chainEvidence),
-  ...protocol.checks,
-];
+  const policyChecks = [
+    ...buildContractIntelligenceChecks(contractIntelligence),
+    ...buildPolicyChecks(decodedAction, chainEvidence),
+    ...protocol.checks,
+  ];
+
   const riskScore = scoreChecks(policyChecks);
   const decision = getDecision(riskScore);
 
@@ -74,6 +85,7 @@ const policyChecks = [
     riskScore,
     riskLevel: getRiskLevel(riskScore),
     protocol,
+    contractIntelligence,
     summary: summary(decision),
     decodedAction,
     chainEvidence,

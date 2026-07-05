@@ -54,6 +54,49 @@ type ChainEvidence = {
   };
 };
 
+type ContractIntelligence = {
+  source: "rpc";
+  address: string;
+  chainId: number;
+  chainName: string;
+  hasCode: boolean;
+  bytecodeSize: number;
+  bytecodeHash?: string;
+  nativeBalanceWei: string;
+  proxy: {
+    isProxy: boolean;
+    proxyType: string;
+    implementationAddress?: string;
+    adminAddress?: string;
+    beaconAddress?: string;
+    evidence: string[];
+  };
+  verification: {
+    provider: string;
+    checked: boolean;
+    verified: boolean;
+    contractName?: string;
+    matchType?: string;
+    sourceId?: string;
+    evidence: string[];
+    error?: string;
+  };
+  reputation: {
+    provider: string;
+    checked: boolean;
+    riskFlags: string[];
+    evidence: string[];
+    error?: string;
+  };
+};
+
+type Protocol = {
+  protocol: string;
+  actionLabel: string;
+  confidence: number;
+  evidence: string[];
+};
+
 type PolicyCheck = {
   id: string;
   title: string;
@@ -72,13 +115,9 @@ export type Report = {
   checkedAt?: string;
   decodedAction?: DecodedAction;
   chainEvidence?: ChainEvidence;
+  contractIntelligence?: ContractIntelligence;
+  protocol?: Protocol;
   policyChecks?: PolicyCheck[];
-  protocol?: {
-    protocol: string;
-    actionLabel: string;
-    confidence: number;
-    evidence: string[];
-  };
 };
 
 function getDecodedTitle(action?: DecodedAction) {
@@ -148,74 +187,112 @@ export function ReportCard({ report }: { report: Report }) {
             <div className="mt-5 rounded-[2rem] bg-paper-soft p-5 text-ink">
               <p className="text-lg leading-8 text-muted">{report.summary}</p>
 
-              <div className="mt-5 rounded-[2rem] bg-paper p-5">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">
-                  decoded action
-                </p>
-
-                {report.protocol && (
-                  <div className="mt-5 rounded-[2rem] bg-paper p-5">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">
-                      Protocol
-                    </p>
-
-                    <p className="mt-2 text-2xl font-black">{report.protocol.protocol}</p>
-
-                    <p className="mt-2 font-bold text-muted">
-                      {report.protocol.actionLabel}
-                    </p>
-
-                    <div className="mt-4 grid gap-2">
-                      {report.protocol.evidence.map((item) => (
-                        <div
-                          key={item}
-                          className="rounded-xl border border-line bg-canvas p-3 text-sm font-bold"
-                        >
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+              <Panel title="decoded action">
                 <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
                   {getDecodedTitle(report.decodedAction)}
                 </p>
 
                 <div className="mt-5 grid gap-3">
                   {decodedRows.map((row) => (
-                    <div
+                    <InfoRow
                       key={`${row.label}:${row.value}`}
-                      className="rounded-[1.5rem] border border-line bg-canvas p-4"
-                    >
-                      <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">
-                        {row.label}
-                      </p>
-                      <p className="mt-2 break-all text-sm font-black leading-6 text-ink">
-                        {row.value}
-                      </p>
-                    </div>
+                      label={row.label}
+                      value={row.value}
+                    />
                   ))}
                 </div>
-              </div>
+              </Panel>
+
+              {report.protocol && (
+                <Panel title="protocol">
+                  <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
+                    {report.protocol.protocol}
+                  </p>
+                  <p className="mt-2 font-bold text-muted">
+                    {report.protocol.actionLabel}
+                  </p>
+                  <InfoRow
+                    label="Confidence"
+                    value={`${Math.round(report.protocol.confidence * 100)}%`}
+                  />
+
+                  <div className="mt-3 grid gap-3">
+                    {report.protocol.evidence.map((item) => (
+                      <InfoRow key={item} label="Evidence" value={item} />
+                    ))}
+                  </div>
+                </Panel>
+              )}
+
+              {report.contractIntelligence && (
+                <Panel title="contract intelligence">
+                  <div className="grid gap-3">
+                    <InfoRow
+                      label="Address"
+                      value={report.contractIntelligence.address}
+                    />
+                    <InfoRow
+                      label="Bytecode"
+                      value={
+                        report.contractIntelligence.hasCode
+                          ? `${report.contractIntelligence.bytecodeSize} bytes`
+                          : "No deployed code"
+                      }
+                    />
+                    <InfoRow
+                      label="Bytecode hash"
+                      value={report.contractIntelligence.bytecodeHash ?? "Unavailable"}
+                    />
+                    <InfoRow
+                      label="Proxy"
+                      value={
+                        report.contractIntelligence.proxy.isProxy
+                          ? report.contractIntelligence.proxy.proxyType
+                          : "No standard proxy detected"
+                      }
+                    />
+                    {report.contractIntelligence.proxy.implementationAddress && (
+                      <InfoRow
+                        label="Implementation"
+                        value={report.contractIntelligence.proxy.implementationAddress}
+                      />
+                    )}
+                    <InfoRow
+                      label="Verification"
+                      value={
+                        report.contractIntelligence.verification.verified
+                          ? (report.contractIntelligence.verification.contractName ??
+                            "Verified source found")
+                          : "No verified source found"
+                      }
+                    />
+                    <InfoRow
+                      label="Reputation"
+                      value={
+                        report.contractIntelligence.reputation.checked
+                          ? report.contractIntelligence.reputation.riskFlags.length
+                            ? `${report.contractIntelligence.reputation.riskFlags.length} risk flag(s)`
+                            : "No known risk flags"
+                          : "Reputation lookup unavailable"
+                      }
+                    />
+                  </div>
+                </Panel>
+              )}
 
               {report.chainEvidence && (
-                <div className="mt-5 rounded-[2rem] bg-paper p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">
-                    chain evidence
-                  </p>
-
-                  <div className="mt-5 grid gap-3">
-                    <EvidenceRow label="Chain" value={report.chainEvidence.chainName} />
-                    <EvidenceRow
-                      label="Contract code"
+                <Panel title="chain evidence">
+                  <div className="grid gap-3">
+                    <InfoRow label="Chain" value={report.chainEvidence.chainName} />
+                    <InfoRow
+                      label="Target code"
                       value={
                         report.chainEvidence.targetHasCode
                           ? `${report.chainEvidence.targetBytecodeSize} bytes`
                           : "No deployed code"
                       }
                     />
-                    <EvidenceRow
+                    <InfoRow
                       label="Token"
                       value={
                         report.chainEvidence.token.symbol
@@ -223,28 +300,25 @@ export function ReportCard({ report }: { report: Report }) {
                           : "Not detected"
                       }
                     />
-                    <EvidenceRow
+                    <InfoRow
                       label="Simulation"
                       value={
                         report.chainEvidence.simulation.success ? "Succeeded" : "Failed"
                       }
                     />
                     {report.chainEvidence.currentAllowanceRaw && (
-                      <EvidenceRow
+                      <InfoRow
                         label="Current allowance raw"
                         value={report.chainEvidence.currentAllowanceRaw}
                       />
                     )}
                   </div>
-                </div>
+                </Panel>
               )}
 
-              <div className="mt-5 rounded-[2rem] bg-paper p-5">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">
-                  next action
-                </p>
+              <Panel title="next action">
                 <p className="mt-2 text-lg font-black">{report.nextAction}</p>
-              </div>
+              </Panel>
             </div>
           </div>
 
@@ -292,7 +366,16 @@ export function ReportCard({ report }: { report: Report }) {
   );
 }
 
-function EvidenceRow({ label, value }: { label: string; value: string }) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-5 rounded-[2rem] bg-paper p-5">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[1.5rem] border border-line bg-canvas p-4">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">{label}</p>

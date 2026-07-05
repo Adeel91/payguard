@@ -7,6 +7,8 @@ export type PayGuardRiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export type PayGuardChain = "base" | "ethereum";
 
+export type ProxyType = "NONE" | "EIP1967" | "BEACON" | "EIP1167_MINIMAL" | "UNKNOWN";
+
 export type PayGuardScanInput = {
   chain: PayGuardChain;
   walletAddress: Address;
@@ -78,6 +80,48 @@ export type PolicyCheck = {
   evidence: string;
 };
 
+export type ProxyAnalysis = {
+  isProxy: boolean;
+  proxyType: ProxyType;
+  implementationAddress?: Address;
+  adminAddress?: Address;
+  beaconAddress?: Address;
+  evidence: string[];
+};
+
+export type VerificationAnalysis = {
+  provider: "sourcify";
+  checked: boolean;
+  verified: boolean;
+  contractName?: string;
+  matchType?: string;
+  sourceId?: string;
+  evidence: string[];
+  error?: string;
+};
+
+export type ReputationAnalysis = {
+  provider: "goplus";
+  checked: boolean;
+  riskFlags: string[];
+  evidence: string[];
+  error?: string;
+};
+
+export type ContractIntelligence = {
+  source: "rpc";
+  address: Address;
+  chainId: number;
+  chainName: string;
+  hasCode: boolean;
+  bytecodeSize: number;
+  bytecodeHash?: string;
+  nativeBalanceWei: string;
+  proxy: ProxyAnalysis;
+  verification: VerificationAnalysis;
+  reputation: ReputationAnalysis;
+};
+
 export type PayGuardReport = {
   scanId: string;
   decision: PayGuardDecision;
@@ -89,6 +133,7 @@ export type PayGuardReport = {
   decodedAction: DecodedAction;
   chainEvidence: ChainEvidence;
   policyChecks: PolicyCheck[];
+  contractIntelligence: ContractIntelligence;
   reasons: string[];
   nextAction: string;
   checkedAt: string;

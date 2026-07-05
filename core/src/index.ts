@@ -10,6 +10,20 @@ export { buildReport } from "./report/builder";
 export { createServiceResponse } from "./service/response";
 export { verifyCounterparty } from "./service/counterparty";
 export { analyzeProtocol } from "./protocols/registry";
+export {
+  buildContractIntelligenceChecks,
+  collectContractIntelligence,
+} from "./intelligence/contract";
+
+export { detectProxy } from "./intelligence/proxy";
+export { getVerificationStatus } from "./intelligence/verification";
+export { getReputationStatus } from "./intelligence/reputation";
+
+export type {
+  ContractIntelligence,
+  ProxyAnalysis,
+  ProxyType,
+} from "./types";
 
 export type {
   CounterpartyVerificationInput,
