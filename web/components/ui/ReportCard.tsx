@@ -88,6 +88,20 @@ type ContractIntelligence = {
     evidence: string[];
     error?: string;
   };
+  explorer: {
+    provider: string;
+    checked: boolean;
+    explorerUrl?: string;
+    creatorAddress?: string;
+    creationTransactionHash?: string;
+    creationBlockNumber?: number;
+    createdAt?: string;
+    contractName?: string;
+    isContract?: boolean;
+    isVerified?: boolean;
+    evidence: string[];
+    error?: string;
+  };
 };
 
 type Protocol = {
@@ -118,6 +132,14 @@ export type Report = {
   contractIntelligence?: ContractIntelligence;
   protocol?: Protocol;
   policyChecks?: PolicyCheck[];
+  aiExplanation?: {
+    provider: string;
+    title: string;
+    plainEnglishSummary: string;
+    userRiskExplanation: string;
+    agentInstruction: string;
+    saferAlternative: string;
+  };
 };
 
 function getDecodedTitle(action?: DecodedAction) {
@@ -267,6 +289,38 @@ export function ReportCard({ report }: { report: Report }) {
                       }
                     />
                     <InfoRow
+                      label="Explorer"
+                      value={
+                        report.contractIntelligence.explorer.checked
+                          ? (report.contractIntelligence.explorer.explorerUrl ??
+                            "Available")
+                          : "Unavailable"
+                      }
+                    />
+
+                    {report.contractIntelligence.explorer.creatorAddress && (
+                      <InfoRow
+                        label="Creator"
+                        value={report.contractIntelligence.explorer.creatorAddress}
+                      />
+                    )}
+
+                    {report.contractIntelligence.explorer.creationTransactionHash && (
+                      <InfoRow
+                        label="Creation transaction"
+                        value={
+                          report.contractIntelligence.explorer.creationTransactionHash
+                        }
+                      />
+                    )}
+
+                    {report.contractIntelligence.explorer.createdAt && (
+                      <InfoRow
+                        label="Created at"
+                        value={report.contractIntelligence.explorer.createdAt}
+                      />
+                    )}
+                    <InfoRow
                       label="Reputation"
                       value={
                         report.contractIntelligence.reputation.checked
@@ -312,6 +366,33 @@ export function ReportCard({ report }: { report: Report }) {
                         value={report.chainEvidence.currentAllowanceRaw}
                       />
                     )}
+                  </div>
+                </Panel>
+              )}
+
+              {report.aiExplanation && (
+                <Panel title="ai explanation">
+                  <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
+                    {report.aiExplanation.title}
+                  </p>
+
+                  <div className="mt-5 grid gap-3">
+                    <InfoRow
+                      label="Summary"
+                      value={report.aiExplanation.plainEnglishSummary}
+                    />
+                    <InfoRow
+                      label="Risk explanation"
+                      value={report.aiExplanation.userRiskExplanation}
+                    />
+                    <InfoRow
+                      label="Agent instruction"
+                      value={report.aiExplanation.agentInstruction}
+                    />
+                    <InfoRow
+                      label="Safer alternative"
+                      value={report.aiExplanation.saferAlternative}
+                    />
                   </div>
                 </Panel>
               )}

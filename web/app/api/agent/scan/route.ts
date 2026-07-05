@@ -8,6 +8,15 @@ function getRpcUrls() {
   };
 }
 
+function getAiOptions() {
+  return {
+    provider: "gemini" as const,
+    apiKey: process.env.GEMINI_API_KEY,
+    model: process.env.GEMINI_MODEL,
+    enabled: process.env.PAYGUARD_AI_ENABLED === "true",
+  };
+}
+
 function getBearerToken(request: Request) {
   const header = request.headers.get("authorization");
 
@@ -53,6 +62,7 @@ export async function POST(request: Request) {
       },
       {
         rpcUrls: getRpcUrls(),
+        ai: getAiOptions(),
       },
     );
 

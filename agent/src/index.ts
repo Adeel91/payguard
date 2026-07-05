@@ -27,6 +27,12 @@ async function main() {
 
   const response = await createServiceResponse(request, {
     rpcUrls: getRpcUrls(),
+    ai: {
+      provider: "gemini",
+      apiKey: process.env.GEMINI_API_KEY,
+      model: process.env.GEMINI_MODEL,
+      enabled: process.env.PAYGUARD_AI_ENABLED === "true",
+    },
   });
 
   console.log(JSON.stringify(response, null, 2));

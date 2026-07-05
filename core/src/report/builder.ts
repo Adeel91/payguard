@@ -3,6 +3,7 @@ import { decodeAction } from "../protocols/decoder";
 import { buildPolicyChecks } from "../policy/checks";
 import { getDecision, getRiskLevel, scoreChecks } from "../policy/scoring";
 import { analyzeProtocol } from "../protocols/registry";
+import { createAiExplanation } from "../ai/explanation";
 import {
   buildContractIntelligenceChecks,
   collectContractIntelligence,
@@ -78,7 +79,7 @@ export async function buildReport(
   const riskScore = scoreChecks(policyChecks);
   const decision = getDecision(riskScore);
 
-  return {
+  const report: PayGuardReport = {
     scanId: createScanId(),
     decision,
     canContinue: decision === "ALLOW",
@@ -93,5 +94,12 @@ export async function buildReport(
     reasons: reasons(policyChecks),
     nextAction: nextAction(decision),
     checkedAt: new Date().toISOString(),
+  };
+
+  const aiExplanation = await createAiExplanation(report, options.ai);
+
+  return {
+    ...report,
+    aiExplanation,
   };
 }

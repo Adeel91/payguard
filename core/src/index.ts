@@ -19,6 +19,10 @@ export { detectProxy } from "./intelligence/proxy";
 export { getVerificationStatus } from "./intelligence/verification";
 export { getReputationStatus } from "./intelligence/reputation";
 
+export { createAiExplanation } from "./ai/explanation";
+
+export type { AiExplanationOptions } from "./ai/explanation";
+
 export type {
   ContractIntelligence,
   ProxyAnalysis,

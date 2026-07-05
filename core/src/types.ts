@@ -108,6 +108,21 @@ export type ReputationAnalysis = {
   error?: string;
 };
 
+export type ExplorerAnalysis = {
+  provider: "blockscout";
+  checked: boolean;
+  explorerUrl?: string;
+  creatorAddress?: Address;
+  creationTransactionHash?: string;
+  creationBlockNumber?: number;
+  createdAt?: string;
+  contractName?: string;
+  isContract?: boolean;
+  isVerified?: boolean;
+  evidence: string[];
+  error?: string;
+};
+
 export type ContractIntelligence = {
   source: "rpc";
   address: Address;
@@ -120,6 +135,16 @@ export type ContractIntelligence = {
   proxy: ProxyAnalysis;
   verification: VerificationAnalysis;
   reputation: ReputationAnalysis;
+  explorer: ExplorerAnalysis;
+};
+
+export type PayGuardAiExplanation = {
+  provider: "gemini" | "deterministic";
+  title: string;
+  plainEnglishSummary: string;
+  userRiskExplanation: string;
+  agentInstruction: string;
+  saferAlternative: string;
 };
 
 export type PayGuardReport = {
@@ -134,6 +159,7 @@ export type PayGuardReport = {
   chainEvidence: ChainEvidence;
   policyChecks: PolicyCheck[];
   contractIntelligence: ContractIntelligence;
+  aiExplanation?: PayGuardAiExplanation;
   reasons: string[];
   nextAction: string;
   checkedAt: string;
@@ -141,6 +167,12 @@ export type PayGuardReport = {
 
 export type PayGuardScanOptions = {
   rpcUrls: Partial<Record<PayGuardChain, string>>;
+  ai?: {
+    provider: "gemini";
+    apiKey?: string;
+    model?: string;
+    enabled?: boolean;
+  };
 };
 
 export type PayGuardServiceRequest = {
