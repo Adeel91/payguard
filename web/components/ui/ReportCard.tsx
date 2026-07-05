@@ -2,185 +2,135 @@ import { DecisionBadge } from "./DecisionBadge";
 import { getDecisionTone } from "./DecisionBadge";
 import type { Decision } from "./DecisionBadge";
 
-type DecodedCall =
+type DecodedAction =
   | {
-      kind: "none";
-    }
-  | {
-      kind: "erc20Approve";
+      type: "ERC20_APPROVE";
       functionName: "approve";
-      spenderAddress: string;
-      amount: string;
-      isUnlimitedApproval: boolean;
+      spender: string;
+      amountRaw: string;
+      unlimited: boolean;
     }
   | {
-      kind: "erc20Transfer";
+      type: "ERC20_TRANSFER";
       functionName: "transfer";
-      recipientAddress: string;
-      amount: string;
+      recipient: string;
+      amountRaw: string;
     }
   | {
-      kind: "erc20TransferFrom";
+      type: "ERC20_TRANSFER_FROM";
       functionName: "transferFrom";
-      fromAddress: string;
-      recipientAddress: string;
-      amount: string;
+      from: string;
+      recipient: string;
+      amountRaw: string;
     }
   | {
-      kind: "setApprovalForAll";
+      type: "OPERATOR_APPROVAL";
       functionName: "setApprovalForAll";
-      operatorAddress: string;
+      operator: string;
       approved: boolean;
     }
   | {
-      kind: "unknownContractCall";
-      selector?: string;
+      type: "UNKNOWN_CALL";
+      selector: string;
     };
+
+type ChainEvidence = {
+  chainId: number;
+  chainName: string;
+  targetHasCode: boolean;
+  targetBytecodeSize: number;
+  nativeBalanceWei: string;
+  token: {
+    name?: string;
+    symbol?: string;
+    decimals?: number;
+  };
+  tokenBalanceRaw?: string;
+  currentAllowanceRaw?: string;
+  simulation: {
+    attempted: boolean;
+    success: boolean;
+    error?: string;
+  };
+};
+
+type PolicyCheck = {
+  id: string;
+  title: string;
+  passed: boolean;
+  severity: string;
+  evidence: string;
+};
 
 export type Report = {
   decision: Decision;
   riskScore: number;
+  riskLevel?: string;
   summary: string;
   reasons: string[];
   nextAction: string;
   checkedAt?: string;
-  decodedCall?: DecodedCall;
+  decodedAction?: DecodedAction;
+  chainEvidence?: ChainEvidence;
+  policyChecks?: PolicyCheck[];
 };
 
-type DetailRow = {
-  label: string;
-  value: string;
-  strong?: boolean;
-};
+function getDecodedTitle(action?: DecodedAction) {
+  if (!action) return "No decoded action";
 
-function getDecodedTitle(decodedCall?: DecodedCall): string {
-  if (!decodedCall || decodedCall.kind === "none") {
-    return "No decoded calldata";
-  }
-
-  if (decodedCall.kind === "erc20Approve") {
-    return "ERC20 approval";
-  }
-
-  if (decodedCall.kind === "erc20Transfer") {
-    return "ERC20 transfer";
-  }
-
-  if (decodedCall.kind === "erc20TransferFrom") {
-    return "ERC20 transferFrom";
-  }
-
-  if (decodedCall.kind === "setApprovalForAll") {
-    return "NFT or token operator approval";
-  }
+  if (action.type === "ERC20_APPROVE") return "ERC20 approval";
+  if (action.type === "ERC20_TRANSFER") return "ERC20 transfer";
+  if (action.type === "ERC20_TRANSFER_FROM") return "ERC20 transferFrom";
+  if (action.type === "OPERATOR_APPROVAL") return "Operator approval";
 
   return "Unknown contract call";
 }
 
-function getDecodedRows(decodedCall?: DecodedCall): DetailRow[] {
-  if (!decodedCall || decodedCall.kind === "none") {
+function getDecodedRows(action?: DecodedAction) {
+  if (!action) {
+    return [{ label: "Status", value: "No decoded action was returned." }];
+  }
+
+  if (action.type === "ERC20_APPROVE") {
     return [
-      {
-        label: "Status",
-        value: "No transaction data was decoded.",
-      },
+      { label: "Function", value: action.functionName },
+      { label: "Spender", value: action.spender },
+      { label: "Amount raw", value: action.amountRaw },
+      { label: "Unlimited approval", value: action.unlimited ? "Yes" : "No" },
     ];
   }
 
-  if (decodedCall.kind === "erc20Approve") {
+  if (action.type === "ERC20_TRANSFER") {
     return [
-      {
-        label: "Function",
-        value: decodedCall.functionName,
-      },
-      {
-        label: "Spender",
-        value: decodedCall.spenderAddress,
-      },
-      {
-        label: "Amount",
-        value: decodedCall.amount,
-      },
-      {
-        label: "Unlimited approval",
-        value: decodedCall.isUnlimitedApproval ? "Yes" : "No",
-        strong: decodedCall.isUnlimitedApproval,
-      },
+      { label: "Function", value: action.functionName },
+      { label: "Recipient", value: action.recipient },
+      { label: "Amount raw", value: action.amountRaw },
     ];
   }
 
-  if (decodedCall.kind === "erc20Transfer") {
+  if (action.type === "ERC20_TRANSFER_FROM") {
     return [
-      {
-        label: "Function",
-        value: decodedCall.functionName,
-      },
-      {
-        label: "Recipient",
-        value: decodedCall.recipientAddress,
-      },
-      {
-        label: "Amount",
-        value: decodedCall.amount,
-      },
+      { label: "Function", value: action.functionName },
+      { label: "From", value: action.from },
+      { label: "Recipient", value: action.recipient },
+      { label: "Amount raw", value: action.amountRaw },
     ];
   }
 
-  if (decodedCall.kind === "erc20TransferFrom") {
+  if (action.type === "OPERATOR_APPROVAL") {
     return [
-      {
-        label: "Function",
-        value: decodedCall.functionName,
-      },
-      {
-        label: "From",
-        value: decodedCall.fromAddress,
-      },
-      {
-        label: "Recipient",
-        value: decodedCall.recipientAddress,
-      },
-      {
-        label: "Amount",
-        value: decodedCall.amount,
-      },
+      { label: "Function", value: action.functionName },
+      { label: "Operator", value: action.operator },
+      { label: "Approved", value: action.approved ? "Yes" : "No" },
     ];
   }
 
-  if (decodedCall.kind === "setApprovalForAll") {
-    return [
-      {
-        label: "Function",
-        value: decodedCall.functionName,
-      },
-      {
-        label: "Operator",
-        value: decodedCall.operatorAddress,
-      },
-      {
-        label: "Approved",
-        value: decodedCall.approved ? "Yes" : "No",
-        strong: decodedCall.approved,
-      },
-    ];
-  }
-
-  return [
-    {
-      label: "Selector",
-      value: decodedCall.selector ?? "Unknown",
-      strong: true,
-    },
-    {
-      label: "Status",
-      value: "PayGuard could not match this calldata to a known payment function.",
-    },
-  ];
+  return [{ label: "Selector", value: action.selector }];
 }
 
 export function ReportCard({ report }: { report: Report }) {
   const tone = getDecisionTone(report.decision);
-  const decodedRows = getDecodedRows(report.decodedCall);
+  const decodedRows = getDecodedRows(report.decodedAction);
 
   return (
     <section className="pb-16">
@@ -198,7 +148,7 @@ export function ReportCard({ report }: { report: Report }) {
                 </p>
 
                 <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
-                  {getDecodedTitle(report.decodedCall)}
+                  {getDecodedTitle(report.decodedAction)}
                 </p>
 
                 <div className="mt-5 grid gap-3">
@@ -210,7 +160,6 @@ export function ReportCard({ report }: { report: Report }) {
                       <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">
                         {row.label}
                       </p>
-
                       <p className="mt-2 break-all text-sm font-black leading-6 text-ink">
                         {row.value}
                       </p>
@@ -218,6 +167,46 @@ export function ReportCard({ report }: { report: Report }) {
                   ))}
                 </div>
               </div>
+
+              {report.chainEvidence && (
+                <div className="mt-5 rounded-[2rem] bg-paper p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">
+                    chain evidence
+                  </p>
+
+                  <div className="mt-5 grid gap-3">
+                    <EvidenceRow label="Chain" value={report.chainEvidence.chainName} />
+                    <EvidenceRow
+                      label="Contract code"
+                      value={
+                        report.chainEvidence.targetHasCode
+                          ? `${report.chainEvidence.targetBytecodeSize} bytes`
+                          : "No deployed code"
+                      }
+                    />
+                    <EvidenceRow
+                      label="Token"
+                      value={
+                        report.chainEvidence.token.symbol
+                          ? `${report.chainEvidence.token.name ?? "Unknown"} (${report.chainEvidence.token.symbol})`
+                          : "Not detected"
+                      }
+                    />
+                    <EvidenceRow
+                      label="Simulation"
+                      value={
+                        report.chainEvidence.simulation.success ? "Succeeded" : "Failed"
+                      }
+                    />
+                    {report.chainEvidence.currentAllowanceRaw && (
+                      <EvidenceRow
+                        label="Current allowance raw"
+                        value={report.chainEvidence.currentAllowanceRaw}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-5 rounded-[2rem] bg-paper p-5">
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">
@@ -230,22 +219,32 @@ export function ReportCard({ report }: { report: Report }) {
 
           <div className="rounded-[2.5rem] bg-paper-soft p-7">
             <p className="text-xs font-black uppercase tracking-[0.28em] text-muted">
-              reasons
+              policy checks
             </p>
 
             <div className="mt-5 grid gap-3">
-              {report.reasons.map((reason, index) => (
+              {(report.policyChecks ?? []).map((check, index) => (
                 <div
-                  key={reason}
+                  key={check.id}
                   className="grid gap-4 rounded-[2rem] bg-paper p-5 sm:grid-cols-[3rem_1fr]"
                 >
                   <div
-                    className={`grid h-12 w-12 place-items-center rounded-2xl font-black ${tone.number}`}
+                    className={`grid h-12 w-12 place-items-center rounded-2xl font-black ${
+                      check.passed ? "bg-green-soft text-green" : tone.number
+                    }`}
                   >
                     {index + 1}
                   </div>
 
-                  <p className="self-center font-bold leading-7 text-muted">{reason}</p>
+                  <div>
+                    <p className="font-black tracking-[-0.03em]">{check.title}</p>
+                    <p className="mt-2 font-bold leading-7 text-muted">
+                      {check.evidence}
+                    </p>
+                    <p className="mt-2 text-xs font-black uppercase tracking-[0.2em] text-muted">
+                      {check.passed ? "passed" : "failed"} · {check.severity}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -259,5 +258,14 @@ export function ReportCard({ report }: { report: Report }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function EvidenceRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.5rem] border border-line bg-canvas p-4">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">{label}</p>
+      <p className="mt-2 break-all text-sm font-black leading-6 text-ink">{value}</p>
+    </div>
   );
 }

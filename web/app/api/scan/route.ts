@@ -1,21 +1,41 @@
-import { scanPayment } from "@payguard/core";
+import { buildReport } from "@payguard/core";
 import { NextResponse } from "next/server";
+
+function getRpcUrls() {
+  return {
+    base: process.env.BASE_RPC_URL,
+    ethereum: process.env.ETHEREUM_RPC_URL,
+  };
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const report = scanPayment(body);
+
+    const report = await buildReport(
+      {
+        chain: body.chain,
+        walletAddress: body.walletAddress,
+        targetAddress: body.targetAddress,
+        transactionData: body.transactionData,
+        valueWei: body.valueWei,
+        purpose: body.purpose,
+      },
+      {
+        rpcUrls: getRpcUrls(),
+      },
+    );
 
     return NextResponse.json({
       ok: true,
       service: "PayGuard",
       version: "0.1.0",
-      requestId: body.requestId ?? `payguard_scan_${Date.now()}`,
+      requestId: body.requestId ?? `pg_scan_${Date.now()}`,
       status: "completed",
-      canContinue: report.decision === "ALLOW",
+      canContinue: report.canContinue,
       report,
     });
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       {
         ok: false,
@@ -23,7 +43,7 @@ export async function POST(request: Request) {
         version: "0.1.0",
         status: "failed",
         canContinue: false,
-        error: "Scan failed",
+        error: error instanceof Error ? error.message : "Scan failed",
       },
       { status: 400 },
     );

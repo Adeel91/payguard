@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "tsx src/index.ts",
+    "remote": "tsx src/remote-demo.ts",
     "build": "tsc"
   },
   "dependencies": {
-    "@payguard/core": "*"
+    "@payguard/core": "*",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
+    "@types/node": "^26.1.0",
     "tsx": "latest",
     "typescript": "latest"
   }

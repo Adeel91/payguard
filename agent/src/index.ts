@@ -1,38 +1,38 @@
-import { scanPayment } from "@payguard/core";
-import type { PayGuardScanInput } from "@payguard/core";
+import "dotenv/config";
 
-type PayGuardAgentRequest = {
-  requestId: string;
-  buyerAgentId: string;
-  sellerAgentId?: string;
-  action: PayGuardScanInput;
-};
+import { createServiceResponse } from "@payguard/core";
+import type { PayGuardServiceRequest } from "@payguard/core";
 
-const request: PayGuardAgentRequest = {
-  requestId: "demo_scan_001",
-  buyerAgentId: "croo_buyer_agent_demo",
-  sellerAgentId: "croo_seller_agent_demo",
-  action: {
-    chain: "base",
-    walletAddress: "0x1111111111111111111111111111111111111111",
-    targetAddress: "0x4444444444444444444444444444444444444444",
-    transactionData:
-      "0x095ea7b30000000000000000000000005555555555555555555555555555555555555555ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    purpose: "Approve token spend before paying another agent",
-  },
-};
+function getRpcUrls() {
+  return {
+    base: process.env.BASE_RPC_URL,
+    ethereum: process.env.ETHEREUM_RPC_URL,
+  };
+}
 
-const report = scanPayment(request.action);
+function readRequest(): PayGuardServiceRequest {
+  const raw = process.env.PAYGUARD_REQUEST_JSON;
 
-const response = {
-  service: "PayGuard",
-  version: "0.1.0",
-  requestId: request.requestId,
-  buyerAgentId: request.buyerAgentId,
-  sellerAgentId: request.sellerAgentId,
-  status: "completed",
-  canContinue: report.decision === "ALLOW",
-  report,
-};
+  if (!raw) {
+    throw new Error(
+      "Missing PAYGUARD_REQUEST_JSON. Pass a real PayGuard service request as JSON.",
+    );
+  }
 
-console.log(JSON.stringify(response, null, 2));
+  return JSON.parse(raw) as PayGuardServiceRequest;
+}
+
+async function main() {
+  const request = readRequest();
+
+  const response = await createServiceResponse(request, {
+    rpcUrls: getRpcUrls(),
+  });
+
+  console.log(JSON.stringify(response, null, 2));
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
