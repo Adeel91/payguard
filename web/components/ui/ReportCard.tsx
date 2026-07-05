@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { DecisionBadge } from "./DecisionBadge";
 import { getDecisionTone } from "./DecisionBadge";
 import type { Decision } from "./DecisionBadge";
@@ -195,150 +196,129 @@ function getDecodedRows(action?: DecodedAction) {
   return [{ label: "Selector", value: action.selector }];
 }
 
+function formatDate(value?: string) {
+  if (!value) return undefined;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString();
+}
+
+function compact(value: string) {
+  if (value.length <= 44) return value;
+
+  if (value.startsWith("0x")) {
+    return `${value.slice(0, 14)}…${value.slice(-10)}`;
+  }
+
+  return `${value.slice(0, 44)}…`;
+}
+
 export function ReportCard({ report }: { report: Report }) {
   const tone = getDecisionTone(report.decision);
   const decodedRows = getDecodedRows(report.decodedAction);
+  const failedChecks = (report.policyChecks ?? []).filter((check) => !check.passed);
+  const passedChecks = (report.policyChecks ?? []).filter((check) => check.passed);
 
   return (
     <section className="pb-16">
-      <div className="rounded-[3rem] border border-line bg-paper p-5 brand-shadow">
-        <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-          <div>
+      <div className="rounded-[3rem] border border-line bg-paper p-4 brand-shadow sm:p-6">
+        <div className="grid gap-5 2xl:grid-cols-[0.62fr_1.38fr] 2xl:items-start">
+          <aside className="rounded-[2.5rem] bg-paper-soft p-5 sm:p-6">
             <DecisionBadge decision={report.decision} riskScore={report.riskScore} />
 
-            <div className="mt-5 rounded-[2rem] bg-paper-soft p-5 text-ink">
-              <p className="text-lg leading-8 text-muted">{report.summary}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3 2xl:grid-cols-1">
+              <SummaryMetric label="Risk level" value={report.riskLevel ?? "Unknown"} />
+              <SummaryMetric label="Failed" value={String(failedChecks.length)} />
+              <SummaryMetric label="Passed" value={String(passedChecks.length)} />
+            </div>
 
-              <Panel title="decoded action">
-                <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
-                  {getDecodedTitle(report.decodedAction)}
+            <div className="mt-5 rounded-[2rem] bg-paper p-5">
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-muted">
+                summary
+              </p>
+              <p className="mt-3 text-lg font-black leading-8 text-ink">
+                {report.summary}
+              </p>
+              <p className="mt-3 font-bold leading-7 text-muted">{report.nextAction}</p>
+            </div>
+
+            {report.aiExplanation && (
+              <div className="mt-5 rounded-[2rem] bg-paper p-5">
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-muted">
+                  ai explanation
                 </p>
 
-                <div className="mt-5 grid gap-3">
+                <p className="mt-3 text-2xl font-black tracking-[-0.04em]">
+                  {report.aiExplanation.title}
+                </p>
+
+                <p className="mt-3 font-bold leading-7 text-muted">
+                  {report.aiExplanation.plainEnglishSummary}
+                </p>
+
+                <div className="mt-4 grid gap-3">
+                  <CompactText
+                    label="Risk"
+                    value={report.aiExplanation.userRiskExplanation}
+                  />
+                  <CompactText
+                    label="Agent"
+                    value={report.aiExplanation.agentInstruction}
+                  />
+                  <CompactText
+                    label="Safer path"
+                    value={report.aiExplanation.saferAlternative}
+                  />
+                </div>
+              </div>
+            )}
+
+            {report.checkedAt && (
+              <p className="mt-4 text-sm font-bold text-muted">
+                Checked at {new Date(report.checkedAt).toLocaleString()}
+              </p>
+            )}
+          </aside>
+
+          <div className="min-w-0">
+            <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
+              <Section
+                title="decoded action"
+                headline={getDecodedTitle(report.decodedAction)}
+              >
+                <InfoGrid>
                   {decodedRows.map((row) => (
-                    <InfoRow
+                    <InfoTile
                       key={`${row.label}:${row.value}`}
                       label={row.label}
                       value={row.value}
                     />
                   ))}
-                </div>
-              </Panel>
+                </InfoGrid>
+              </Section>
 
               {report.protocol && (
-                <Panel title="protocol">
-                  <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
-                    {report.protocol.protocol}
-                  </p>
-                  <p className="mt-2 font-bold text-muted">
-                    {report.protocol.actionLabel}
-                  </p>
-                  <InfoRow
-                    label="Confidence"
-                    value={`${Math.round(report.protocol.confidence * 100)}%`}
-                  />
-
-                  <div className="mt-3 grid gap-3">
-                    {report.protocol.evidence.map((item) => (
-                      <InfoRow key={item} label="Evidence" value={item} />
-                    ))}
-                  </div>
-                </Panel>
-              )}
-
-              {report.contractIntelligence && (
-                <Panel title="contract intelligence">
-                  <div className="grid gap-3">
-                    <InfoRow
-                      label="Address"
-                      value={report.contractIntelligence.address}
+                <Section title="protocol" headline={report.protocol.protocol}>
+                  <InfoGrid>
+                    <InfoTile label="Action" value={report.protocol.actionLabel} />
+                    <InfoTile
+                      label="Confidence"
+                      value={`${Math.round(report.protocol.confidence * 100)}%`}
                     />
-                    <InfoRow
-                      label="Bytecode"
-                      value={
-                        report.contractIntelligence.hasCode
-                          ? `${report.contractIntelligence.bytecodeSize} bytes`
-                          : "No deployed code"
-                      }
-                    />
-                    <InfoRow
-                      label="Bytecode hash"
-                      value={report.contractIntelligence.bytecodeHash ?? "Unavailable"}
-                    />
-                    <InfoRow
-                      label="Proxy"
-                      value={
-                        report.contractIntelligence.proxy.isProxy
-                          ? report.contractIntelligence.proxy.proxyType
-                          : "No standard proxy detected"
-                      }
-                    />
-                    {report.contractIntelligence.proxy.implementationAddress && (
-                      <InfoRow
-                        label="Implementation"
-                        value={report.contractIntelligence.proxy.implementationAddress}
-                      />
-                    )}
-                    <InfoRow
-                      label="Verification"
-                      value={
-                        report.contractIntelligence.verification.verified
-                          ? (report.contractIntelligence.verification.contractName ??
-                            "Verified source found")
-                          : "No verified source found"
-                      }
-                    />
-                    <InfoRow
-                      label="Explorer"
-                      value={
-                        report.contractIntelligence.explorer.checked
-                          ? (report.contractIntelligence.explorer.explorerUrl ??
-                            "Available")
-                          : "Unavailable"
-                      }
-                    />
-
-                    {report.contractIntelligence.explorer.creatorAddress && (
-                      <InfoRow
-                        label="Creator"
-                        value={report.contractIntelligence.explorer.creatorAddress}
-                      />
-                    )}
-
-                    {report.contractIntelligence.explorer.creationTransactionHash && (
-                      <InfoRow
-                        label="Creation transaction"
-                        value={
-                          report.contractIntelligence.explorer.creationTransactionHash
-                        }
-                      />
-                    )}
-
-                    {report.contractIntelligence.explorer.createdAt && (
-                      <InfoRow
-                        label="Created at"
-                        value={report.contractIntelligence.explorer.createdAt}
-                      />
-                    )}
-                    <InfoRow
-                      label="Reputation"
-                      value={
-                        report.contractIntelligence.reputation.checked
-                          ? report.contractIntelligence.reputation.riskFlags.length
-                            ? `${report.contractIntelligence.reputation.riskFlags.length} risk flag(s)`
-                            : "No known risk flags"
-                          : "Reputation lookup unavailable"
-                      }
-                    />
-                  </div>
-                </Panel>
+                  </InfoGrid>
+                  <EvidenceList items={report.protocol.evidence} />
+                </Section>
               )}
 
               {report.chainEvidence && (
-                <Panel title="chain evidence">
-                  <div className="grid gap-3">
-                    <InfoRow label="Chain" value={report.chainEvidence.chainName} />
-                    <InfoRow
+                <Section title="chain evidence" headline={report.chainEvidence.chainName}>
+                  <InfoGrid>
+                    <InfoTile
                       label="Target code"
                       value={
                         report.chainEvidence.targetHasCode
@@ -346,7 +326,7 @@ export function ReportCard({ report }: { report: Report }) {
                           : "No deployed code"
                       }
                     />
-                    <InfoRow
+                    <InfoTile
                       label="Token"
                       value={
                         report.chainEvidence.token.symbol
@@ -354,113 +334,299 @@ export function ReportCard({ report }: { report: Report }) {
                           : "Not detected"
                       }
                     />
-                    <InfoRow
+                    <InfoTile
                       label="Simulation"
                       value={
                         report.chainEvidence.simulation.success ? "Succeeded" : "Failed"
                       }
                     />
                     {report.chainEvidence.currentAllowanceRaw && (
-                      <InfoRow
-                        label="Current allowance raw"
+                      <InfoTile
+                        label="Allowance raw"
                         value={report.chainEvidence.currentAllowanceRaw}
                       />
                     )}
-                  </div>
-                </Panel>
+                    {report.chainEvidence.tokenBalanceRaw && (
+                      <InfoTile
+                        label="Balance raw"
+                        value={report.chainEvidence.tokenBalanceRaw}
+                      />
+                    )}
+                  </InfoGrid>
+                </Section>
               )}
 
-              {report.aiExplanation && (
-                <Panel title="ai explanation">
-                  <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
-                    {report.aiExplanation.title}
-                  </p>
-
-                  <div className="mt-5 grid gap-3">
-                    <InfoRow
-                      label="Summary"
-                      value={report.aiExplanation.plainEnglishSummary}
-                    />
-                    <InfoRow
-                      label="Risk explanation"
-                      value={report.aiExplanation.userRiskExplanation}
-                    />
-                    <InfoRow
-                      label="Agent instruction"
-                      value={report.aiExplanation.agentInstruction}
-                    />
-                    <InfoRow
-                      label="Safer alternative"
-                      value={report.aiExplanation.saferAlternative}
-                    />
-                  </div>
-                </Panel>
-              )}
-
-              <Panel title="next action">
-                <p className="mt-2 text-lg font-black">{report.nextAction}</p>
-              </Panel>
-            </div>
-          </div>
-
-          <div className="rounded-[2.5rem] bg-paper-soft p-7">
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-muted">
-              policy checks
-            </p>
-
-            <div className="mt-5 grid gap-3">
-              {(report.policyChecks ?? []).map((check, index) => (
-                <div
-                  key={check.id}
-                  className="grid gap-4 rounded-[2rem] bg-paper p-5 sm:grid-cols-[3rem_1fr]"
+              {report.contractIntelligence && (
+                <Section
+                  title="contract intelligence"
+                  headline={
+                    report.contractIntelligence.explorer.contractName ??
+                    report.contractIntelligence.verification.contractName ??
+                    "Target contract"
+                  }
+                  className="xl:col-span-2 2xl:col-span-3"
                 >
-                  <div
-                    className={`grid h-12 w-12 place-items-center rounded-2xl font-black ${
-                      check.passed ? "bg-green-soft text-green" : tone.number
-                    }`}
-                  >
-                    {index + 1}
-                  </div>
+                  <InfoGrid wide>
+                    <InfoTile
+                      label="Address"
+                      value={report.contractIntelligence.address}
+                    />
+                    <InfoTile
+                      label="Bytecode"
+                      value={
+                        report.contractIntelligence.hasCode
+                          ? `${report.contractIntelligence.bytecodeSize} bytes`
+                          : "No deployed code"
+                      }
+                    />
+                    <InfoTile
+                      label="Proxy"
+                      value={
+                        report.contractIntelligence.proxy.isProxy
+                          ? report.contractIntelligence.proxy.proxyType
+                          : "No standard proxy detected"
+                      }
+                    />
+                    <InfoTile
+                      label="Verification"
+                      value={
+                        report.contractIntelligence.verification.verified ||
+                        report.contractIntelligence.explorer.isVerified
+                          ? "Verified"
+                          : "Not verified"
+                      }
+                    />
+                    <InfoTile
+                      label="Reputation"
+                      value={
+                        report.contractIntelligence.reputation.checked
+                          ? report.contractIntelligence.reputation.riskFlags.length
+                            ? `${report.contractIntelligence.reputation.riskFlags.length} risk flag(s)`
+                            : "No known risk flags"
+                          : "Unavailable"
+                      }
+                    />
+                    <InfoTile
+                      label="Explorer"
+                      value={
+                        report.contractIntelligence.explorer.checked
+                          ? "Open Blockscout"
+                          : "Unavailable"
+                      }
+                      href={report.contractIntelligence.explorer.explorerUrl}
+                    />
+                    {report.contractIntelligence.explorer.creatorAddress && (
+                      <InfoTile
+                        label="Creator"
+                        value={report.contractIntelligence.explorer.creatorAddress}
+                      />
+                    )}
+                    {report.contractIntelligence.explorer.createdAt && (
+                      <InfoTile
+                        label="Created"
+                        value={
+                          formatDate(report.contractIntelligence.explorer.createdAt) ??
+                          report.contractIntelligence.explorer.createdAt
+                        }
+                      />
+                    )}
+                    {report.contractIntelligence.proxy.implementationAddress && (
+                      <InfoTile
+                        label="Implementation"
+                        value={report.contractIntelligence.proxy.implementationAddress}
+                      />
+                    )}
+                    {report.contractIntelligence.explorer.creationTransactionHash && (
+                      <InfoTile
+                        label="Creation tx"
+                        value={
+                          report.contractIntelligence.explorer.creationTransactionHash
+                        }
+                      />
+                    )}
+                  </InfoGrid>
+                </Section>
+              )}
+            </div>
+          </div>
+        </div>
 
-                  <div>
-                    <p className="font-black tracking-[-0.03em]">{check.title}</p>
-                    <p className="mt-2 font-bold leading-7 text-muted">
-                      {check.evidence}
-                    </p>
-                    <p className="mt-2 text-xs font-black uppercase tracking-[0.2em] text-muted">
-                      {check.passed ? "passed" : "failed"} · {check.severity}
-                    </p>
-                  </div>
-                </div>
-              ))}
+        <div className="mt-5 rounded-[2.5rem] bg-paper-soft p-5 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-muted">
+                policy checks
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.05em]">
+                Evidence based verdict
+              </h2>
             </div>
 
-            {report.checkedAt && (
-              <p className="mt-5 text-sm font-bold text-muted">
-                Checked at {new Date(report.checkedAt).toLocaleString()}
-              </p>
-            )}
+            <p className="text-sm font-black text-muted">
+              {failedChecks.length} failed · {passedChecks.length} passed
+            </p>
           </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+            {(report.policyChecks ?? []).map((check, index) => (
+              <PolicyCheckCard
+                key={check.id}
+                check={check}
+                index={index}
+                failTone={tone.number}
+              />
+            ))}
+          </div>
+
+          {!report.policyChecks?.length && (
+            <div className="mt-5 rounded-[2rem] bg-paper p-5">
+              <p className="font-black text-muted">No policy checks were returned.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function SummaryMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="mt-5 rounded-[2rem] bg-paper p-5">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">{title}</p>
+    <div className="min-w-0 rounded-[1.5rem] border border-line bg-canvas p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">{label}</p>
+      <p className="mt-2 break-words text-lg font-black text-ink">{value}</p>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  headline,
+  children,
+  className = "",
+}: {
+  title: string;
+  headline: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`min-w-0 rounded-[2.5rem] border border-line bg-paper-soft p-5 ${className}`}
+    >
+      <p className="text-xs font-black uppercase tracking-[0.24em] text-muted">{title}</p>
+      <p className="mt-2 break-words text-2xl font-black tracking-[-0.04em]">
+        {headline}
+      </p>
+      <div className="mt-5 min-w-0">{children}</div>
+    </div>
+  );
+}
+
+function InfoGrid({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+  return (
+    <div className={wide ? "grid gap-3 md:grid-cols-2 xl:grid-cols-3" : "grid gap-3"}>
       {children}
     </div>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoTile({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+}) {
+  const shown = compact(value);
+
+  const content = (
+    <p className="mt-2 min-w-0 break-words text-sm font-black leading-6 text-ink">
+      {shown}
+    </p>
+  );
+
   return (
-    <div className="rounded-[1.5rem] border border-line bg-canvas p-4">
+    <div className="min-w-0 rounded-[1.5rem] border border-line bg-canvas p-4">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">{label}</p>
-      <p className="mt-2 break-all text-sm font-black leading-6 text-ink">{value}</p>
+
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          title={value}
+          className="block min-w-0 underline decoration-2 underline-offset-4"
+        >
+          {content}
+        </a>
+      ) : (
+        <div title={value}>{content}</div>
+      )}
+    </div>
+  );
+}
+
+function CompactText({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-[1.5rem] bg-canvas p-4">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">{label}</p>
+      <p className="mt-2 break-words text-sm font-bold leading-6 text-muted">{value}</p>
+    </div>
+  );
+}
+
+function EvidenceList({ items }: { items: string[] }) {
+  if (!items.length) return null;
+
+  return (
+    <div className="mt-3 grid gap-2">
+      {items.map((item) => (
+        <p
+          key={item}
+          className="min-w-0 rounded-[1.25rem] bg-canvas p-3 text-sm font-bold leading-6 text-muted [overflow-wrap:anywhere]"
+        >
+          {item}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function PolicyCheckCard({
+  check,
+  index,
+  failTone,
+}: {
+  check: PolicyCheck;
+  index: number;
+  failTone: string;
+}) {
+  return (
+    <div className="grid min-w-0 gap-4 rounded-[2rem] bg-paper p-5 sm:grid-cols-[3rem_1fr]">
+      <div
+        className={`grid h-12 w-12 place-items-center rounded-2xl font-black ${
+          check.passed ? "bg-green-soft text-green" : failTone
+        }`}
+      >
+        {index + 1}
+      </div>
+
+      <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <p className="min-w-0 break-words font-black tracking-[-0.03em]">
+            {check.title}
+          </p>
+          <p className="shrink-0 text-xs font-black uppercase tracking-[0.18em] text-muted">
+            {check.passed ? "passed" : "failed"} · {check.severity}
+          </p>
+        </div>
+
+        <p className="mt-2 min-w-0 font-bold leading-7 text-muted [overflow-wrap:anywhere]">
+          {check.evidence}
+        </p>
+      </div>
     </div>
   );
 }
