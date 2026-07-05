@@ -46,6 +46,41 @@ export class PayGuardClient {
     return response.json();
   }
 
+  async createCapOrder<TResponse = unknown>(input: unknown): Promise<TResponse> {
+    const response = await fetch(`${this.baseUrl}/api/cap/order`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(input),
+    });
+
+    const text = await response.text();
+
+    if (!text) {
+      throw new Error(
+        `CAP order returned empty response. Status ${response.status}. Check web server logs.`,
+      );
+    }
+
+    let data: unknown;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(
+        `CAP order returned non JSON response. Status ${response.status}. Body: ${text}`,
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(JSON.stringify(data));
+    }
+
+    return data as TResponse;
+  }
+
   private async post(path: string, body: unknown) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",

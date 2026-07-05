@@ -24,7 +24,7 @@ export function buildPolicyChecks(
     severity: "MEDIUM",
     evidence: evidence.simulation.success
       ? "The transaction completed successfully in a read only simulation."
-      : evidence.simulation.error ?? "The transaction failed in simulation.",
+      : (evidence.simulation.error ?? "The transaction failed in simulation."),
   });
 
   if (decodedAction.type === "UNKNOWN_CALL") {
@@ -71,7 +71,9 @@ export function buildPolicyChecks(
   if (decodedAction.type === "ERC20_TRANSFER") {
     const amount = BigInt(decodedAction.amountRaw);
     const balance =
-      evidence.tokenBalanceRaw === undefined ? undefined : BigInt(evidence.tokenBalanceRaw);
+      evidence.tokenBalanceRaw === undefined
+        ? undefined
+        : BigInt(evidence.tokenBalanceRaw);
 
     checks.push({
       id: "balance_covers_transfer",
@@ -99,8 +101,7 @@ export function buildPolicyChecks(
       title: "transferFrom requires review",
       passed: false,
       severity: "HIGH",
-      evidence:
-        "transferFrom can move assets from another wallet when allowance exists.",
+      evidence: "transferFrom can move assets from another wallet when allowance exists.",
     });
   }
 

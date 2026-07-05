@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "remote": "tsx src/remote-demo.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@payguard/core": "*",

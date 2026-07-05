@@ -107,9 +107,7 @@ async function collectExplorerAnalysis(
       asString(addressData.smart_contract?.toString());
 
     const isContract =
-      typeof addressData.is_contract === "boolean"
-        ? addressData.is_contract
-        : undefined;
+      typeof addressData.is_contract === "boolean" ? addressData.is_contract : undefined;
 
     const isVerified =
       typeof addressData.is_verified === "boolean"
@@ -271,7 +269,8 @@ export function buildContractIntelligenceChecks(
   checks.push({
     id: "proxy_implementation_visible",
     title: "Proxy implementation is visible",
-    passed: !intelligence.proxy.isProxy || Boolean(intelligence.proxy.implementationAddress),
+    passed:
+      !intelligence.proxy.isProxy || Boolean(intelligence.proxy.implementationAddress),
     severity: "HIGH",
     evidence:
       intelligence.proxy.isProxy && intelligence.proxy.implementationAddress

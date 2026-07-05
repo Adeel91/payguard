@@ -10,8 +10,23 @@
     "dev:web": "yarn workspace web dev",
     "build:web": "yarn workspace web build",
     "lint:web": "yarn workspace web lint",
+    "lint:web:fix": "yarn workspace web lint:fix",
     "dev:agent": "yarn workspace @payguard/agent dev",
     "build:agent": "yarn workspace @payguard/agent build",
-    "lint": "yarn lint:web"
+    "typecheck:agent": "yarn workspace @payguard/agent typecheck",
+    "remote:agent": "yarn workspace @payguard/agent remote",
+    "build:core": "yarn workspace @payguard/core build",
+    "typecheck:core": "yarn workspace @payguard/core typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "yarn lint:web && yarn typecheck:core && yarn typecheck:agent",
+    "typecheck": "yarn typecheck:core && yarn typecheck:agent",
+    "build": "yarn build:core && yarn build:agent && yarn build:web",
+    "fix": "yarn format && yarn lint:web:fix",
+    "verify": "yarn format:check && yarn lint && yarn build",
+    "verify:remote": "yarn remote:agent"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.4"
   }
 }

@@ -93,7 +93,11 @@ async function readAllowance(
   }
 }
 
-export function formatTokenAmount(amountRaw?: string, decimals?: number, symbol?: string) {
+export function formatTokenAmount(
+  amountRaw?: string,
+  decimals?: number,
+  symbol?: string,
+) {
   if (!amountRaw || decimals === undefined) {
     return amountRaw;
   }

@@ -4,15 +4,10 @@ import { bootstrapProtocols } from "./bootstrap";
 import { getAnalyzers } from "./index";
 import { unknownAnalyzer } from "./unknown";
 
-export function analyzeProtocol(
-  action: DecodedAction,
-  evidence: ChainEvidence,
-) {
+export function analyzeProtocol(action: DecodedAction, evidence: ChainEvidence) {
   bootstrapProtocols();
 
-  const analyzer =
-    getAnalyzers().find((a) => a.canAnalyze(action)) ??
-    unknownAnalyzer;
+  const analyzer = getAnalyzers().find((a) => a.canAnalyze(action)) ?? unknownAnalyzer;
 
   return analyzer.analyze(action, evidence);
 }

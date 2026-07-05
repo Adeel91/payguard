@@ -1,6 +1,12 @@
 import type { Address } from "viem";
 import type { ReputationAnalysis } from "../types";
 
+type ProcessLike = {
+  env?: Record<string, string | undefined>;
+};
+
+declare const process: ProcessLike | undefined;
+
 type UnknownRecord = Record<string, unknown>;
 
 const GOPLUS_BASE_URL = "https://api.gopluslabs.io/api/v1";
@@ -52,15 +58,9 @@ function getRiskFlags(record: UnknownRecord | undefined, keys: string[]) {
 }
 
 function getHeaders() {
-  const headers: Record<string, string> = {
+  return {
     accept: "application/json",
   };
-
-  if (process.env.GOPLUS_API_KEY) {
-    headers.Authorization = process.env.GOPLUS_API_KEY;
-  }
-
-  return headers;
 }
 
 async function fetchJson(url: string): Promise<UnknownRecord | undefined> {

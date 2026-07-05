@@ -33,7 +33,9 @@ export const erc721Analyzer: ProtocolAnalyzer = {
 
     return {
       protocol: "ERC721 or ERC1155",
-      actionLabel: action.approved ? "Operator approval grant" : "Operator approval revoke",
+      actionLabel: action.approved
+        ? "Operator approval grant"
+        : "Operator approval revoke",
       confidence: evidence.targetHasCode ? 0.75 : 0.4,
       evidence: [
         evidence.targetHasCode

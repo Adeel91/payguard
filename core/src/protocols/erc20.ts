@@ -21,7 +21,9 @@ export const erc20Analyzer: ProtocolAnalyzer = {
     const checks: PolicyCheck[] = [];
     const notes: string[] = [];
 
-    notes.push(`Target appears to expose ERC20 compatible metadata for ${tokenLabel(evidence)}.`);
+    notes.push(
+      `Target appears to expose ERC20 compatible metadata for ${tokenLabel(evidence)}.`,
+    );
 
     if (action.type === "ERC20_APPROVE") {
       checks.push({
@@ -65,7 +67,9 @@ export const erc20Analyzer: ProtocolAnalyzer = {
     if (action.type === "ERC20_TRANSFER") {
       const amount = BigInt(action.amountRaw);
       const balance =
-        evidence.tokenBalanceRaw === undefined ? undefined : BigInt(evidence.tokenBalanceRaw);
+        evidence.tokenBalanceRaw === undefined
+          ? undefined
+          : BigInt(evidence.tokenBalanceRaw);
 
       checks.push({
         id: "erc20_balance_covers_transfer",

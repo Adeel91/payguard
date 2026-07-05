@@ -23,21 +23,22 @@ export { createAiExplanation } from "./ai/explanation";
 
 export type { AiExplanationOptions } from "./ai/explanation";
 
-export type {
-  ContractIntelligence,
-  ProxyAnalysis,
-  ProxyType,
-} from "./types";
+export { PAYGUARD_CAPABILITY, PAYGUARD_CAPABILITY_ID } from "./cap/capability";
+export { createDeliveryProof, hashJson } from "./cap/proof";
+export { createCapOrderResponse } from "./service/cap";
+
+export type { PayGuardCapOrderRequest, PayGuardCapOrderResponse } from "./service/cap";
+
+export type { PayGuardDeliveryProof } from "./cap/proof";
+
+export type { ContractIntelligence, ProxyAnalysis, ProxyType } from "./types";
 
 export type {
   CounterpartyVerificationInput,
   CounterpartyVerificationResponse,
 } from "./service/counterparty";
 
-export type {
-  ProtocolAnalyzer,
-  ProtocolAnalysis,
-} from "./protocols/base";
+export type { ProtocolAnalyzer, ProtocolAnalysis } from "./protocols/base";
 
 export type {
   ChainEvidence,
