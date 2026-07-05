@@ -73,6 +73,12 @@ export type Report = {
   decodedAction?: DecodedAction;
   chainEvidence?: ChainEvidence;
   policyChecks?: PolicyCheck[];
+  protocol?: {
+    protocol: string;
+    actionLabel: string;
+    confidence: number;
+    evidence: string[];
+  };
 };
 
 function getDecodedTitle(action?: DecodedAction) {
@@ -146,6 +152,31 @@ export function ReportCard({ report }: { report: Report }) {
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-muted">
                   decoded action
                 </p>
+
+                {report.protocol && (
+                  <div className="mt-5 rounded-[2rem] bg-paper p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">
+                      Protocol
+                    </p>
+
+                    <p className="mt-2 text-2xl font-black">{report.protocol.protocol}</p>
+
+                    <p className="mt-2 font-bold text-muted">
+                      {report.protocol.actionLabel}
+                    </p>
+
+                    <div className="mt-4 grid gap-2">
+                      {report.protocol.evidence.map((item) => (
+                        <div
+                          key={item}
+                          className="rounded-xl border border-line bg-canvas p-3 text-sm font-bold"
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <p className="mt-2 text-2xl font-black tracking-[-0.04em]">
                   {getDecodedTitle(report.decodedAction)}

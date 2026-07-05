@@ -58,15 +58,15 @@ export function decodeAction(data: Hex): DecodedAction {
         approved,
       };
     }
+
+    return {
+      type: "UNKNOWN_CALL",
+      selector: data.slice(0, 10),
+    };
   } catch {
     return {
       type: "UNKNOWN_CALL",
       selector: data.slice(0, 10),
     };
   }
-
-  return {
-    type: "UNKNOWN_CALL",
-    selector: data.slice(0, 10),
-  };
 }

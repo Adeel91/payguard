@@ -2,6 +2,7 @@ import { collectChainEvidence, assertValidInput } from "../blockchain/evidence";
 import { decodeAction } from "../protocols/decoder";
 import { buildPolicyChecks } from "../policy/checks";
 import { getDecision, getRiskLevel, scoreChecks } from "../policy/scoring";
+import { analyzeProtocol } from "../protocols/registry";
 import type {
   PayGuardDecision,
   PayGuardReport,
@@ -57,7 +58,12 @@ export async function buildReport(
 
   const decodedAction = decodeAction(input.transactionData);
   const chainEvidence = await collectChainEvidence(input, decodedAction, options);
-  const policyChecks = buildPolicyChecks(decodedAction, chainEvidence);
+  const protocol = analyzeProtocol(decodedAction, chainEvidence);
+
+const policyChecks = [
+  ...buildPolicyChecks(decodedAction, chainEvidence),
+  ...protocol.checks,
+];
   const riskScore = scoreChecks(policyChecks);
   const decision = getDecision(riskScore);
 
@@ -67,6 +73,7 @@ export async function buildReport(
     canContinue: decision === "ALLOW",
     riskScore,
     riskLevel: getRiskLevel(riskScore),
+    protocol,
     summary: summary(decision),
     decodedAction,
     chainEvidence,

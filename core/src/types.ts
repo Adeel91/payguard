@@ -1,4 +1,5 @@
 import type { Address, Hex } from "viem";
+import type { ProtocolAnalysis } from "./protocols/base";
 
 export type PayGuardDecision = "ALLOW" | "WARN" | "BLOCK";
 
@@ -83,6 +84,7 @@ export type PayGuardReport = {
   canContinue: boolean;
   riskScore: number;
   riskLevel: PayGuardRiskLevel;
+  protocol: ProtocolAnalysis;
   summary: string;
   decodedAction: DecodedAction;
   chainEvidence: ChainEvidence;

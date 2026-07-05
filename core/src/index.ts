@@ -9,11 +9,17 @@ export { scoreChecks, getDecision, getRiskLevel } from "./policy/scoring";
 export { buildReport } from "./report/builder";
 export { createServiceResponse } from "./service/response";
 export { verifyCounterparty } from "./service/counterparty";
+export { analyzeProtocol } from "./protocols/registry";
 
 export type {
   CounterpartyVerificationInput,
   CounterpartyVerificationResponse,
 } from "./service/counterparty";
+
+export type {
+  ProtocolAnalyzer,
+  ProtocolAnalysis,
+} from "./protocols/base";
 
 export type {
   ChainEvidence,
