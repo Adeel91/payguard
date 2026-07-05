@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/public/logo.png" width="140" alt="PayGuard Logo" />
+</p>
+
 <h1 align="center">PayGuard</h1>
 
 <p align="center">
@@ -5,12 +9,12 @@
 </p>
 
 <p align="center">
-  CAP Provider Agent • A2A Callable API • Web3 Payment Risk Scan • Contract Intelligence • Delivery Proofs
+  CAP Provider Agent • A2A Callable API • Web3 Payment Risk Scan • Contract Intelligence • CROO Provider Runtime • Delivery Proofs
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/CROO-Agent%20Commerce-111827?style=for-the-badge" alt="CROO Agent Commerce" />
-  <img src="https://img.shields.io/badge/CAP-Provider%20Agent-7c3aed?style=for-the-badge" alt="CAP Provider Agent" />
+  <img src="https://img.shields.io/badge/CAP-Provider%20Agent-1f6bff?style=for-the-badge" alt="CAP Provider Agent" />
   <img src="https://img.shields.io/badge/Base-Onchain%20Checks-0052ff?style=for-the-badge" alt="Base" />
   <img src="https://img.shields.io/badge/Ethereum-Supported-627eea?style=for-the-badge" alt="Ethereum" />
   <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=nextdotjs" alt="Next.js" />
@@ -21,9 +25,9 @@
 <p align="center">
   <a href="https://payguard-hack.vercel.app/">Live App</a>
   ·
-  <a href="https://payguard-hack.vercel.app//api/agent/manifest">Agent Manifest</a>
+  <a href="https://payguard-hack.vercel.app/api/agent/manifest">Agent Manifest</a>
   ·
-  <a href="https://payguard-hack.vercel.app//api/cap/capability">CAP Capability</a>
+  <a href="https://payguard-hack.vercel.app/api/cap/capability">CAP Capability</a>
 </p>
 
 ---
@@ -32,7 +36,7 @@
 
 **PayGuard** is a paid safety agent that other agents call before approving, signing, or paying onchain.
 
-It is built for the **CROO Agent Hackathon** as a CAP provider agent for autonomous agent commerce. A buyer agent can call PayGuard before it sends funds, approves tokens, or interacts with a contract. PayGuard reviews the proposed action and returns a clear machine readable decision.
+It is built for the **CROO Agent Hackathon** as a live CAP provider agent for autonomous agent commerce. A buyer agent can call PayGuard before it sends funds, approves tokens, or interacts with a contract. PayGuard reviews the proposed action and returns a clear machine readable decision.
 
 ```text
 ALLOW
@@ -44,6 +48,27 @@ PayGuard is not a recovery tool. It works before the signing moment.
 
 ```text
 Ask PayGuard before the money moves.
+```
+
+---
+
+## Live Links
+
+```text
+Live app:
+https://payguard-hack.vercel.app
+
+Scan page:
+https://payguard-hack.vercel.app/scan
+
+Agent manifest:
+https://payguard-hack.vercel.app/api/agent/manifest
+
+CAP capability:
+https://payguard-hack.vercel.app/api/cap/capability
+
+CAP order endpoint:
+https://payguard-hack.vercel.app/api/cap/order
 ```
 
 ---
@@ -126,6 +151,7 @@ Public CAP capability metadata
 Authenticated agent scan endpoint
 Authenticated counterparty verification endpoint
 Authenticated CAP order endpoint
+CROO WebSocket provider runtime
 Delivery proof for completed work
 ```
 
@@ -135,10 +161,22 @@ Capability:
 payguard_before_signing_payment_risk_scan
 ```
 
+Service:
+
+```text
+Before Signing Payment Risk Scan
+```
+
 Pricing:
 
 ```text
 0.05 USDC on Base
+```
+
+SLA:
+
+```text
+30 min
 ```
 
 Tracks:
@@ -148,22 +186,79 @@ Data & Verification Agents
 DeFi / On-chain Ops Agents
 ```
 
+CROO store tags used:
+
+```text
+Data & Analytics
+DeFi & Trading
+Automation & Workflow
+```
+
 ---
 
 ## Why This Is Not Just a Scanner
 
 Most scanners are human facing. PayGuard is agent facing.
 
-| Traditional scanner    | PayGuard                             |
-| ---------------------- | ------------------------------------ |
-| Human opens a website  | Agent calls an endpoint              |
-| Human reads warnings   | Agent receives ALLOW, WARN, or BLOCK |
-| Manual workflow        | A2A composable workflow              |
-| Usually not priced     | Paid CAP provider capability         |
-| No delivery proof      | Keccak256 delivery proof             |
-| No buyer agent context | Buyer agent and seller agent aware   |
+| Traditional scanner    | PayGuard                              |
+| ---------------------- | ------------------------------------- |
+| Human opens a website  | Agent calls an endpoint               |
+| Human reads warnings   | Agent receives ALLOW, WARN, or BLOCK  |
+| Manual workflow        | A2A composable workflow               |
+| Usually not priced     | Paid CAP provider capability          |
+| No delivery proof      | Keccak256 delivery proof              |
+| No buyer agent context | Buyer agent and seller agent aware    |
+| No marketplace runtime | CROO provider listens for paid orders |
 
 PayGuard is built so other agents can hire it before they continue.
+
+---
+
+## CROO Provider Runtime
+
+PayGuard includes a CROO provider worker in:
+
+```text
+agent/src/croo-provider.ts
+```
+
+The provider connects to CROO over WebSocket and waits for marketplace activity.
+
+Runtime flow:
+
+```text
+CROO negotiation created
+        ↓
+PayGuard provider accepts negotiation
+        ↓
+CROO creates order
+        ↓
+Buyer pays order
+        ↓
+PayGuard provider receives OrderPaid event
+        ↓
+Provider calls deployed PayGuard CAP endpoint
+        ↓
+PayGuard returns risk report and delivery proof
+        ↓
+Provider delivers report to CROO with deliverOrder
+```
+
+Run provider locally:
+
+```bash
+yarn workspace @payguard/agent croo:provider
+```
+
+Expected log:
+
+```text
+Starting PayGuard CROO provider...
+websocket connected
+PayGuard provider connected. Waiting for CROO orders...
+```
+
+For 24/7 operation, deploy this provider as a long running worker on Render, Railway, Fly.io, or a VPS. The Vercel app hosts the website and HTTP API. The provider worker keeps the CROO WebSocket connection alive.
 
 ---
 
@@ -230,6 +325,37 @@ Delivery status
 Paid status
 Risk report
 Delivery proof
+```
+
+### CROO WebSocket Provider
+
+PayGuard also includes a CROO SDK provider worker.
+
+```text
+agent/src/croo-provider.ts
+```
+
+It handles:
+
+```text
+NegotiationCreated
+OrderCreated
+OrderPaid
+OrderCompleted
+OrderRejected
+OrderExpired
+```
+
+On paid orders, it calls:
+
+```text
+POST /api/cap/order
+```
+
+Then delivers the report back to CROO using:
+
+```text
+client.deliverOrder(...)
 ```
 
 ### A2A Callable API
@@ -358,7 +484,18 @@ graph TD
         MARKET["Agent marketplace"]
     end
 
-    subgraph Web["web · Next.js"]
+    subgraph CROO["CROO"]
+        STORE["Agent Store"]
+        WS["CROO WebSocket"]
+        ORDERBOOK["Orders and settlement"]
+    end
+
+    subgraph Provider["agent · CROO Provider"]
+        WORKER["croo-provider.ts"]
+        SDK["CROO SDK"]
+    end
+
+    subgraph Web["web · Next.js on Vercel"]
         UI["Scan UI"]
         MANIFEST["GET /api/agent/manifest"]
         SCAN["POST /api/agent/scan"]
@@ -386,9 +523,13 @@ graph TD
     end
 
     HUMAN --> UI
+    BUYER --> STORE
+    STORE --> WS
+    WS --> WORKER
+    WORKER --> SDK
+    WORKER --> ORDER
     BUYER --> MANIFEST
     BUYER --> SCAN
-    BUYER --> ORDER
     WALLET --> SCAN
     MARKET --> CAPABILITY
 
@@ -409,6 +550,8 @@ graph TD
     CONTRACT --> GOPLUS
     CONTRACT --> BLOCKSCOUT
     AI --> GEMINI
+
+    WORKER --> ORDERBOOK
 ```
 
 ---
@@ -420,6 +563,7 @@ payguard/
 ├── agent/
 │   ├── src/
 │   │   ├── client.ts
+│   │   ├── croo-provider.ts
 │   │   ├── index.ts
 │   │   └── remote-demo.ts
 │   ├── package.json
@@ -484,6 +628,8 @@ payguard/
 │   ├── components/
 │   │   ├── layout/
 │   │   └── ui/
+│   ├── public/
+│   │   └── logo.png
 │   ├── package.json
 │   └── next.config.ts
 │
@@ -534,7 +680,7 @@ Service response creation
 
 ### `agent`
 
-The agent proof and remote client.
+The agent runtime and proof package.
 
 It provides:
 
@@ -542,6 +688,7 @@ It provides:
 PayGuard API client
 Local service runner
 Remote CAP demo
+CROO WebSocket provider
 End to end verification script
 ```
 
@@ -666,7 +813,7 @@ curl -X POST https://YOUR_DEPLOYED_APP_URL/api/cap/order \
       "chain": "base",
       "walletAddress": "0x0000000000000000000000000000000000000001",
       "targetAddress": "0x4200000000000000000000000000000000000006",
-      "transactionData": "0x095ea7b30000000000000000000000001111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "transactionData": "0x095ea7b30000000000000000000001111111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "valueWei": "0",
       "purpose": "CAP paid safety scan before approval"
     },
@@ -742,7 +889,7 @@ A successful scan response is designed for both humans and agents.
 
 ## CAP Payment Status
 
-During local testing, a CAP order can return:
+During local endpoint testing, a CAP order can return:
 
 ```json
 {
@@ -754,11 +901,9 @@ That is intentional.
 
 PayGuard only reports `paid: true` when a real CROO payment transaction hash is present.
 
-```env
-CROO_PAYMENT_TX_HASH=0x_real_payment_transaction_hash
-```
+When running through the CROO provider, the provider reads the CROO order metadata and forwards payment data into the PayGuard CAP response.
 
-Optional CAP metadata:
+Optional local CAP metadata:
 
 ```env
 CROO_CAP_ORDER_ID=real_order_id
@@ -789,29 +934,23 @@ CROO_PAYMENT_TX_HASH=
 
 ### `agent/.env`
 
+For local remote demos and CROO provider runtime:
+
 ```env
-PAYGUARD_SERVICE_URL=http://localhost:3000
+PAYGUARD_SERVICE_URL=https://payguard-hack.vercel.app
 PAYGUARD_AGENT_API_KEY=replace_with_same_secret_as_web
 
-BASE_RPC_URL=https://mainnet.base.org
-ETHEREUM_RPC_URL=https://ethereum-rpc.publicnode.com
-
-PAYGUARD_AI_ENABLED=true
-GEMINI_API_KEY=replace_with_new_rotated_gemini_key
-GEMINI_MODEL=gemini-2.5-flash
+CROO_API_URL=https://api.croo.network
+CROO_WS_URL=wss://api.croo.network/ws
+CROO_API_KEY=replace_with_croo_key
+CROO_SDK_KEY=replace_with_croo_key
 
 CROO_CAP_ORDER_ID=
 CROO_ESCROW_ID=
 CROO_PAYMENT_TX_HASH=
 ```
 
-For deployed testing:
-
-```env
-PAYGUARD_SERVICE_URL=https://YOUR_DEPLOYED_APP_URL
-```
-
-Generate a strong API key:
+Generate a strong PayGuard API key:
 
 ```bash
 openssl rand -hex 32
@@ -872,7 +1011,51 @@ CROO_ESCROW_ID=
 CROO_PAYMENT_TX_HASH=
 ```
 
-Do not set `PAYGUARD_SERVICE_URL` in Vercel. That variable is only used by the local agent client.
+Do not set `PAYGUARD_SERVICE_URL` in Vercel. That variable is used by the provider and local agent clients.
+
+---
+
+## Render Provider Deployment
+
+Vercel hosts the website and HTTP API. Render can run the long lived CROO provider process.
+
+Create a Render Background Worker or Web Service with these settings:
+
+```text
+Name:
+payguard-croo-provider
+
+Runtime:
+Node
+
+Build Command:
+yarn install && yarn build:core && yarn build:agent
+
+Start Command:
+yarn workspace @payguard/agent croo:provider
+```
+
+Required Render environment variables:
+
+```env
+PAYGUARD_SERVICE_URL=https://payguard-hack.vercel.app
+PAYGUARD_AGENT_API_KEY=replace_with_same_secret_as_vercel
+
+CROO_API_URL=https://api.croo.network
+CROO_WS_URL=wss://api.croo.network/ws
+CROO_API_KEY=replace_with_croo_key
+CROO_SDK_KEY=replace_with_croo_key
+```
+
+Expected provider logs:
+
+```text
+Starting PayGuard CROO provider...
+websocket connected
+PayGuard provider connected. Waiting for CROO orders...
+```
+
+When this worker is running, the CROO Agent Store should show PayGuard as online.
 
 ---
 
@@ -912,6 +1095,18 @@ http://localhost:3000/scan
 yarn dev:agent
 ```
 
+### Run CROO Provider Locally
+
+```bash
+yarn workspace @payguard/agent croo:provider
+```
+
+Expected result:
+
+```text
+PayGuard provider connected. Waiting for CROO orders...
+```
+
 ### Run Remote CAP Demo
 
 Start the web app first:
@@ -936,17 +1131,18 @@ PayGuard remote CAP demo passed.
 
 ## Main Scripts
 
-| Script               | Description                                         |
-| -------------------- | --------------------------------------------------- |
-| `yarn dev:web`       | Run the Next.js web app                             |
-| `yarn build:web`     | Build the web app                                   |
-| `yarn build:core`    | Build the shared core package                       |
-| `yarn build:agent`   | Build the agent package                             |
-| `yarn typecheck`     | Typecheck core and agent                            |
-| `yarn lint`          | Run web lint plus core and agent typechecks         |
-| `yarn fix`           | Format and auto fix lint                            |
-| `yarn verify`        | Format check, lint, typecheck, and build everything |
-| `yarn verify:remote` | Run the remote CAP demo                             |
+| Script                                         | Description                                         |
+| ---------------------------------------------- | --------------------------------------------------- |
+| `yarn dev:web`                                 | Run the Next.js web app                             |
+| `yarn build:web`                               | Build the web app                                   |
+| `yarn build:core`                              | Build the shared core package                       |
+| `yarn build:agent`                             | Build the agent package                             |
+| `yarn typecheck`                               | Typecheck core and agent                            |
+| `yarn lint`                                    | Run web lint plus core and agent typechecks         |
+| `yarn fix`                                     | Format and auto fix lint                            |
+| `yarn verify`                                  | Format check, lint, typecheck, and build everything |
+| `yarn verify:remote`                           | Run the remote CAP demo                             |
+| `yarn workspace @payguard/agent croo:provider` | Start the CROO provider worker                      |
 
 ---
 
@@ -967,13 +1163,62 @@ Paid before signing safety agent for Web3 agent commerce.
 ### Description
 
 ```text
-PayGuard is a callable CAP provider agent that buyer agents use before approving, signing, or paying. It decodes calldata, reads live chain evidence, checks contract verification and reputation, simulates the action, applies policy scoring, and returns ALLOW, WARN, or BLOCK with a delivery proof.
+PayGuard is a paid before-signing safety agent for Web3 agent commerce.
+
+Buyer agents call PayGuard before approving tokens, signing calldata, or paying another agent. PayGuard decodes the transaction, checks live chain evidence, contract verification, reputation signals, simulation result, and policy risk.
+
+It returns a machine-readable ALLOW, WARN, or BLOCK decision with evidence and delivery proof, so the buyer agent knows whether to continue or stop before funds move.
+```
+
+### Service
+
+```text
+Before Signing Payment Risk Scan
+```
+
+### Service Description
+
+```text
+Reviews a proposed EVM transaction or agent payment before signing. PayGuard decodes calldata, checks live chain evidence, contract verification, reputation signals, simulation result, and policy risk, then returns ALLOW, WARN, or BLOCK with delivery proof.
+```
+
+### Requirements
+
+```text
+Provide the transaction to scan before signing.
+
+Required fields:
+chain: base or ethereum
+walletAddress: wallet preparing to sign
+targetAddress: contract or recipient address
+transactionData: calldata starting with 0x
+purpose: why this action is being considered
+
+Agents may send the same fields as JSON.
+```
+
+### Deliverable
+
+```text
+PayGuard returns a JSON risk report with ALLOW, WARN, or BLOCK decision, risk score, decoded action, evidence, next action, and delivery proof.
 ```
 
 ### Price
 
 ```text
-0.05 USDC on Base
+0.05 USDC
+```
+
+### SLA
+
+```text
+30 min
+```
+
+### Require Fund Transfer
+
+```text
+No
 ```
 
 ### Tracks
@@ -983,27 +1228,35 @@ Data & Verification Agents
 DeFi / On-chain Ops Agents
 ```
 
+### Tags
+
+```text
+Data & Analytics
+DeFi & Trading
+Automation & Workflow
+```
+
 ### Public Endpoints
 
 ```text
 Manifest:
-https://YOUR_DEPLOYED_APP_URL/api/agent/manifest
+https://payguard-hack.vercel.app/api/agent/manifest
 
 CAP capability:
-https://YOUR_DEPLOYED_APP_URL/api/cap/capability
+https://payguard-hack.vercel.app/api/cap/capability
 ```
 
 ### Authenticated Endpoints
 
 ```text
 Agent scan:
-https://YOUR_DEPLOYED_APP_URL/api/agent/scan
+https://payguard-hack.vercel.app/api/agent/scan
 
 CAP order:
-https://YOUR_DEPLOYED_APP_URL/api/cap/order
+https://payguard-hack.vercel.app/api/cap/order
 
 Counterparty check:
-https://YOUR_DEPLOYED_APP_URL/api/agent/verify-counterparty
+https://payguard-hack.vercel.app/api/agent/verify-counterparty
 ```
 
 ---
@@ -1013,18 +1266,21 @@ https://YOUR_DEPLOYED_APP_URL/api/agent/verify-counterparty
 Use this flow for the demo video.
 
 ```text
-1. Open the deployed PayGuard app
-2. Explain that PayGuard is called before signing or payment
-3. Open the agent manifest endpoint
-4. Open the CAP capability endpoint
-5. Run the remote demo against the deployed URL
-6. Show the buyer agent requesting a WETH approval scan
-7. Show PayGuard decoding the approval calldata
-8. Show the unlimited approval risk
-9. Show the BLOCK decision
-10. Show the CAP order status as DELIVERED
-11. Show the delivery proof hash
-12. Explain that a buyer agent stops before signing when PayGuard returns BLOCK
+1. Open the deployed PayGuard app.
+2. Explain that PayGuard is called before signing or payment.
+3. Open the scan page.
+4. Click Risky approval.
+5. Run the scan.
+6. Show the BLOCK decision.
+7. Show decoded ERC20 approval and unlimited spending risk.
+8. Open the agent manifest endpoint.
+9. Open the CAP capability endpoint.
+10. Open CROO Agent Store.
+11. Show PayGuard listed as LIVE.
+12. Show the service card: Before Signing Payment Risk Scan.
+13. Show the CROO provider terminal connected.
+14. Explain that the provider listens for CROO orders and delivers PayGuard reports.
+15. Explain that buyer agents stop when PayGuard returns BLOCK.
 ```
 
 ---
@@ -1053,6 +1309,7 @@ Decode dangerous approval patterns
 Read live chain evidence
 Check contract verification and reputation
 Return a machine readable decision
+Deliver CAP order results through CROO
 Give agents a reason to stop before loss happens
 ```
 
@@ -1083,6 +1340,7 @@ No private mempool monitoring
 No fund recovery
 Third party checks depend on RPC, Sourcify, GoPlus, Blockscout, and Gemini availability
 Paid status depends on CROO payment transaction metadata
+CROO provider must run as a long lived worker to stay online
 ```
 
 ---
@@ -1105,13 +1363,7 @@ Paid status depends on CROO payment transaction metadata
    PayGuard is designed as a paid dependency in agent to agent workflows.
 
 6. **Honest execution**  
-   Local delivery and real paid settlement are represented separately.
-
----
-
-## License
-
-MIT License.
+   Local delivery, CROO provider delivery, and real paid settlement are represented separately.
 
 ---
 
@@ -1132,3 +1384,11 @@ PayGuard returns ALLOW, WARN, or BLOCK
         ↓
 Agent continues only when safe
 ```
+
+The result is a practical A2A security primitive for autonomous commerce: paid, callable, machine readable, and delivered with proof.
+
+---
+
+## License
+
+MIT License.

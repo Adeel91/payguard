@@ -6,9 +6,11 @@
     "dev": "tsx src/index.ts",
     "remote": "tsx src/remote-demo.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "croo:provider": "tsx src/croo-provider.ts"
   },
   "dependencies": {
+    "@croo-network/sdk": "^0.2.1",
     "@payguard/core": "*",
     "dotenv": "^17.4.2"
   },
