@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createServer } from "node:http";
 import { AgentClient, DeliverableType, EventType } from "@croo-network/sdk";
 import type { Event as CrooSdkEvent } from "@croo-network/sdk/dist/types";
 
@@ -278,7 +279,20 @@ async function handleOrderPaid(client: AgentClient, event: CrooEvent) {
   }
 }
 
+function startHealthServer() {
+  const port = Number(process.env.PORT ?? 3001);
+
+  createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "text/plain" });
+    response.end("PayGuard CROO provider online\n");
+  }).listen(port, "0.0.0.0", () => {
+    console.log(`Health server listening on port ${port}`);
+  });
+}
+
 async function main() {
+  startHealthServer();
+
   const apiKey = requiredEnv("CROO_SDK_KEY");
   const apiUrl = optionalEnv("CROO_API_URL", "https://api.croo.network");
   const wsUrl = optionalEnv("CROO_WS_URL", "wss://api.croo.network/ws");
