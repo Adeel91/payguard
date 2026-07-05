@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "remote": "tsx src/remote-demo.ts",
+    "croo:provider": "tsx src/croo-provider.ts",
+    "croo:provider:prod": "node dist/croo-provider.js",
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "croo:provider": "tsx src/croo-provider.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@croo-network/sdk": "^0.2.1",
