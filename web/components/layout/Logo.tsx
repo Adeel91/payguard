@@ -3,7 +3,10 @@ import Link from "next/link";
 
 export function Logo({ subtitle = "payment permission agent" }: { subtitle?: string }) {
   return (
-    <Link href="/" className="flex items-center gap-3">
+    <Link
+      href="/"
+      className="flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left"
+    >
       <Image
         src="/logo.png"
         alt="PayGuard"
