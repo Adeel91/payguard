@@ -115,6 +115,10 @@ function isChain(value: unknown): value is "base" | "ethereum" {
   return value === "base" || value === "ethereum";
 }
 
+function isHexCalldata(value?: string) {
+  return Boolean(value && /^0x[0-9a-fA-F]*$/.test(value));
+}
+
 function readActionFromObject(
   value?: Record<string, unknown>,
 ): PayGuardAction | undefined {
@@ -132,7 +136,13 @@ function readActionFromObject(
   const valueWei = stringValue(source.valueWei);
   const purpose = stringValue(source.purpose);
 
-  if (!isChain(chain) || !walletAddress || !targetAddress || !transactionData) {
+  if (
+    !isChain(chain) ||
+    !walletAddress ||
+    !targetAddress ||
+    !transactionData ||
+    !isHexCalldata(transactionData)
+  ) {
     return undefined;
   }
 
@@ -185,6 +195,32 @@ function buildPayGuardRequest(
       paymentAmountRaw: order.price,
       paymentTxHash: order.payTxHash,
     },
+  };
+}
+
+function createIncompleteInputReport(orderId: string, error: unknown) {
+  return {
+    provider: "PayGuard",
+    status: "INCOMPLETE_INPUT",
+    decision: "WARN",
+    riskLevel: "MEDIUM",
+    riskScore: 50,
+    summary:
+      "PayGuard received a paid CROO order, but the request was missing valid transaction data, so a full before-signing scan could not be completed.",
+    reason:
+      "Invalid or missing transactionData. Expected calldata starting with 0x plus chain, walletAddress, targetAddress, and purpose.",
+    nextAction:
+      "Resubmit with chain, walletAddress, targetAddress, transactionData, and purpose.",
+    requiredFormat: {
+      chain: "base",
+      walletAddress: DEFAULT_DEMO_WALLET,
+      targetAddress: DEFAULT_BASE_WETH,
+      transactionData: DEFAULT_RISKY_APPROVAL_CALLDATA,
+      purpose: "Check WETH approval before signing",
+    },
+    orderId,
+    error: error instanceof Error ? error.message : String(error),
+    deliveredAt: new Date().toISOString(),
   };
 }
 
@@ -269,12 +305,25 @@ async function handleOrderPaid(client: AgentClient, event: CrooEvent) {
 
     console.log(`Delivered PayGuard report for order: ${orderId}`);
   } catch (error) {
-    console.error("Failed to deliver order:", error);
+    console.error("PayGuard scan failed; delivering WARN report:", error);
+
+    const fallbackReport = createIncompleteInputReport(orderId, error);
 
     try {
-      await client.rejectOrder(orderId, "PayGuard failed to deliver the scan.");
-    } catch (rejectError) {
-      console.error("Failed to reject order after delivery failure:", rejectError);
+      await client.deliverOrder(orderId, {
+        deliverableType: DeliverableType.Text,
+        deliverableText: JSON.stringify(fallbackReport, null, 2),
+      });
+
+      console.log(`Delivered incomplete-input WARN report for order: ${orderId}`);
+    } catch (deliverError) {
+      console.error("Failed to deliver fallback WARN report:", deliverError);
+
+      try {
+        await client.rejectOrder(orderId, "PayGuard failed to deliver the scan.");
+      } catch (rejectError) {
+        console.error("Failed to reject order after delivery failure:", rejectError);
+      }
     }
   }
 }
