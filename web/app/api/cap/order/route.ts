@@ -1,5 +1,9 @@
-import { createCapOrderResponse } from "@payguard/core";
-import type { PayGuardChain } from "@payguard/core";
+import {
+  createCapOrderResponse,
+  createCapOrderWarningResponse,
+  type PayGuardCapOrderRequest,
+  type PayGuardChain,
+} from "@payguard/core";
 
 function getRpcUrls(): Partial<Record<PayGuardChain, string>> {
   return {
@@ -43,21 +47,22 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const body = await request.json();
+  let body: unknown;
 
-    const response = await createCapOrderResponse(body, {
+  try {
+    body = await request.json();
+  } catch (error) {
+    return Response.json(createCapOrderWarningResponse(undefined, error));
+  }
+
+  try {
+    const response = await createCapOrderResponse(body as PayGuardCapOrderRequest, {
       rpcUrls: getRpcUrls(),
       ai: getAiOptions(),
     });
 
     return Response.json(response);
   } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : "CAP order failed.",
-      },
-      { status: 400 },
-    );
+    return Response.json(createCapOrderWarningResponse(body, error));
   }
 }

@@ -25,7 +25,7 @@ export type { AiExplanationOptions } from "./ai/explanation";
 
 export { PAYGUARD_CAPABILITY, PAYGUARD_CAPABILITY_ID } from "./cap/capability";
 export { createDeliveryProof, hashJson } from "./cap/proof";
-export { createCapOrderResponse } from "./service/cap";
+export { createCapOrderResponse, createCapOrderWarningResponse } from "./service/cap";
 
 export type { PayGuardCapOrderRequest, PayGuardCapOrderResponse } from "./service/cap";
 
