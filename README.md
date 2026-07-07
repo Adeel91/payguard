@@ -5,11 +5,11 @@
 <h1 align="center">PayGuard</h1>
 
 <p align="center">
-  <strong>Paid before signing safety agent for Web3 agent commerce</strong>
+  <strong>Paid before-signing safety and approval repair agent for Web3 agent commerce</strong>
 </p>
 
 <p align="center">
-  CAP Provider Agent • A2A Callable API • Web3 Payment Risk Scan • Contract Intelligence • CROO Provider Runtime • Delivery Proofs
+  CAP Provider Agent • A2A Callable API • CROO Provider Runtime • Web3 Risk Scan • Safe Approval Fix • Delivery Proofs
 </p>
 
 <p align="center">
@@ -28,15 +28,17 @@
   <a href="https://payguard-hack.vercel.app/api/agent/manifest">Agent Manifest</a>
   ·
   <a href="https://payguard-hack.vercel.app/api/cap/capability">CAP Capability</a>
+  ·
+  <a href="https://agent.croo.network/agents/47460383-b9cc-486c-a349-68ac98098f4b">CROO Agent Store</a>
 </p>
 
 ---
 
 ## Overview
 
-**PayGuard** is a paid safety agent that other agents call before approving, signing, or paying onchain.
+**PayGuard** is a paid before-signing safety agent for Web3 agent commerce.
 
-It is built for the **CROO Agent Hackathon** as a live CAP provider agent for autonomous agent commerce. A buyer agent can call PayGuard before it sends funds, approves tokens, or interacts with a contract. PayGuard reviews the proposed action and returns a clear machine readable decision.
+It is built for the **CROO Agent Hackathon** as a live CAP provider agent. Buyer agents can hire PayGuard before approving tokens, signing calldata, or paying another agent. PayGuard returns a clear machine-readable decision:
 
 ```text
 ALLOW
@@ -44,7 +46,13 @@ WARN
 BLOCK
 ```
 
-PayGuard is not a recovery tool. It works before the signing moment.
+PayGuard also includes a paid repair service for unsafe ERC20 approvals:
+
+```text
+FIXED
+```
+
+That means PayGuard does not only warn agents before signing. It can also generate safer replacement approval calldata when an approval grants unsafe or unlimited spending authority.
 
 ```text
 Ask PayGuard before the money moves.
@@ -69,6 +77,15 @@ https://payguard-hack.vercel.app/api/cap/capability
 
 CAP order endpoint:
 https://payguard-hack.vercel.app/api/cap/order
+
+Safe Approval Fix endpoint:
+https://payguard-hack.vercel.app/api/cap/fix-approval
+
+CROO Agent Store:
+https://agent.croo.network/agents/47460383-b9cc-486c-a349-68ac98098f4b
+
+CrooCred report:
+https://croocred.axiqo.xyz/r/cc-47460383-20260706100512.html
 ```
 
 ---
@@ -84,11 +101,11 @@ PayGuard gives autonomous agents a safety checkpoint.
 ```text
 Buyer agent prepares a payment or approval
         ↓
-Buyer agent calls PayGuard
+Buyer agent hires PayGuard on CROO
         ↓
 PayGuard checks calldata, chain state, contract intelligence, and reputation
         ↓
-PayGuard returns ALLOW, WARN, or BLOCK
+PayGuard returns ALLOW, WARN, BLOCK, or FIXED
         ↓
 Buyer agent continues only when safe
 ```
@@ -102,11 +119,32 @@ PayGuard returns BLOCK.
 The buyer agent stops before signing.
 ```
 
+The premium repair use case goes further:
+
+```text
+A buyer agent has unsafe unlimited approval calldata.
+Buyer agent hires Safe Approval Fix.
+PayGuard generates limited approve() replacement calldata.
+Buyer agent signs the safer replacement instead of the unsafe original.
+```
+
+---
+
+## Paid Services
+
+PayGuard exposes three CROO services.
+
+| Service                    | Price     | Purpose                                                               |
+| -------------------------- | --------- | --------------------------------------------------------------------- |
+| Token Approval Scan        | 0.05 USDC | Fast before-signing scan for ERC20 approval calldata                  |
+| Full Transaction Risk Scan | 0.10 USDC | Full before-signing transaction risk scan with AI explanation         |
+| Safe Approval Fix          | 0.50 USDC | Repairs unsafe approval calldata into safer limited approval calldata |
+
 ---
 
 ## What PayGuard Does
 
-PayGuard reviews a proposed Web3 action using multiple layers of analysis.
+PayGuard reviews proposed Web3 actions using multiple layers of analysis.
 
 | Layer                 | What PayGuard checks                                                                               |
 | --------------------- | -------------------------------------------------------------------------------------------------- |
@@ -114,7 +152,8 @@ PayGuard reviews a proposed Web3 action using multiple layers of analysis.
 | Chain evidence        | Deployed code, bytecode size, native balance, token metadata, token balance, allowance, simulation |
 | Contract intelligence | Proxy patterns, source verification, reputation signals, explorer metadata                         |
 | Policy engine         | Risk checks, severity scoring, ALLOW/WARN/BLOCK decision                                           |
-| AI explanation        | Optional Gemini generated plain English summary and agent instruction                              |
+| AI explanation        | Optional Gemini-generated plain-English explanation and agent instruction                          |
+| Approval repair       | Generates safer limited approve(spender, amount) calldata                                          |
 | Delivery proof        | Keccak256 report hash and output hash for CAP order delivery                                       |
 
 PayGuard supports:
@@ -126,16 +165,107 @@ Ethereum
 
 ---
 
+## Service Modes
+
+### Token Approval Scan
+
+Fast scan for token approvals.
+
+```text
+Price: 0.05 USDC
+Endpoint used internally: POST /api/cap/order
+scanMode: approval
+AI explanation: disabled
+```
+
+Returns:
+
+```text
+ALLOW
+WARN
+BLOCK
+```
+
+Use this when the buyer agent only needs to check an ERC20 approval before signing.
+
+---
+
+### Full Transaction Risk Scan
+
+Full before-signing transaction review.
+
+```text
+Price: 0.10 USDC
+Endpoint used internally: POST /api/cap/order
+scanMode: full
+AI explanation: enabled when configured
+```
+
+Returns:
+
+```text
+ALLOW
+WARN
+BLOCK
+```
+
+Use this when the buyer agent wants the complete risk report with decoded calldata, chain evidence, contract intelligence, simulation, reputation checks, policy checks, and optional AI explanation.
+
+---
+
+### Safe Approval Fix
+
+Premium approval repair service.
+
+```text
+Price: 0.50 USDC
+Endpoint used internally: POST /api/cap/fix-approval
+serviceMode: fix_approval
+```
+
+Returns:
+
+```text
+FIXED
+```
+
+Safe Approval Fix generates replacement ERC20 approval calldata.
+
+It returns:
+
+```text
+What was wrong
+Why it was dangerous
+Why the fix is safer
+Replacement targetAddress
+Replacement transactionData
+Signing instructions
+Verification checklist
+Delivery proof
+```
+
+Example:
+
+```text
+Unsafe input:
+approve(spender, uint256.max)
+
+Safe replacement:
+approve(spender, safeAmountRaw)
+```
+
+---
+
 ## Who Uses PayGuard
 
-| User               | Why they use it                                      |
-| ------------------ | ---------------------------------------------------- |
-| CROO buyer agents  | Check payments before paying seller agents           |
-| Wallet agents      | Stop dangerous approvals before signing              |
-| DeFi agents        | Review approvals and contract calls before execution |
-| Agent marketplaces | Add a safety gate before settlement                  |
-| Human users        | Understand transaction risk before signing           |
-| Apps and wallets   | Add a callable risk engine through API               |
+| User               | Why they use it                                       |
+| ------------------ | ----------------------------------------------------- |
+| CROO buyer agents  | Check or repair approvals before paying seller agents |
+| Wallet agents      | Stop dangerous approvals before signing               |
+| DeFi agents        | Review approvals and contract calls before execution  |
+| Agent marketplaces | Add a safety gate before settlement                   |
+| Human users        | Understand transaction risk before signing            |
+| Apps and wallets   | Add a callable risk engine through API                |
 
 ---
 
@@ -151,6 +281,7 @@ Public CAP capability metadata
 Authenticated agent scan endpoint
 Authenticated counterparty verification endpoint
 Authenticated CAP order endpoint
+Authenticated Safe Approval Fix endpoint
 CROO WebSocket provider runtime
 Delivery proof for completed work
 ```
@@ -161,16 +292,18 @@ Capability:
 payguard_before_signing_payment_risk_scan
 ```
 
-Service:
+Primary service:
 
 ```text
-Before Signing Payment Risk Scan
+Full Transaction Risk Scan
 ```
 
-Pricing:
+Service lineup:
 
 ```text
-0.05 USDC on Base
+Token Approval Scan — 0.05 USDC
+Full Transaction Risk Scan — 0.10 USDC
+Safe Approval Fix — 0.50 USDC
 ```
 
 SLA:
@@ -198,17 +331,18 @@ Automation & Workflow
 
 ## Why This Is Not Just a Scanner
 
-Most scanners are human facing. PayGuard is agent facing.
+Most scanners are human-facing. PayGuard is agent-facing.
 
-| Traditional scanner    | PayGuard                              |
-| ---------------------- | ------------------------------------- |
-| Human opens a website  | Agent calls an endpoint               |
-| Human reads warnings   | Agent receives ALLOW, WARN, or BLOCK  |
-| Manual workflow        | A2A composable workflow               |
-| Usually not priced     | Paid CAP provider capability          |
-| No delivery proof      | Keccak256 delivery proof              |
-| No buyer agent context | Buyer agent and seller agent aware    |
-| No marketplace runtime | CROO provider listens for paid orders |
+| Traditional scanner    | PayGuard                                    |
+| ---------------------- | ------------------------------------------- |
+| Human opens a website  | Agent hires a paid provider                 |
+| Human reads warnings   | Agent receives ALLOW, WARN, BLOCK, or FIXED |
+| Manual workflow        | A2A composable workflow                     |
+| Usually not priced     | Paid CROO/CAP service                       |
+| No delivery proof      | Keccak256 delivery proof                    |
+| No buyer agent context | Buyer agent and seller agent aware          |
+| No repair path         | Can generate safer approval calldata        |
+| No marketplace runtime | CROO provider listens for paid orders       |
 
 PayGuard is built so other agents can hire it before they continue.
 
@@ -237,11 +371,32 @@ Buyer pays order
         ↓
 PayGuard provider receives OrderPaid event
         ↓
-Provider calls deployed PayGuard CAP endpoint
+Provider checks which PayGuard service was purchased
         ↓
-PayGuard returns risk report and delivery proof
+Provider calls the correct deployed PayGuard API route
+        ↓
+PayGuard returns report and delivery proof
         ↓
 Provider delivers report to CROO with deliverOrder
+```
+
+Service routing:
+
+```text
+Token Approval Scan
+        ↓
+POST /api/cap/order
+scanMode: approval
+
+Full Transaction Risk Scan
+        ↓
+POST /api/cap/order
+scanMode: full
+
+Safe Approval Fix
+        ↓
+POST /api/cap/fix-approval
+serviceMode: fix_approval
 ```
 
 Run provider locally:
@@ -258,7 +413,7 @@ websocket connected
 PayGuard provider connected. Waiting for CROO orders...
 ```
 
-For 24/7 operation, deploy this provider as a long running worker on Render, Railway, Fly.io, or a VPS. The Vercel app hosts the website and HTTP API. The provider worker keeps the CROO WebSocket connection alive.
+For 24/7 operation, deploy this provider as a long-running worker on Render, Railway, Fly.io, or a VPS. The Vercel app hosts the website and HTTP API. The provider worker keeps the CROO WebSocket connection alive.
 
 ---
 
@@ -289,11 +444,12 @@ Decoded action:
 
 ```text
 approve(address spender, uint256 amount)
+
 spender = 0x1111111111111111111111111111111111111111
 amount = uint256.max
 ```
 
-Expected result:
+Expected scan result:
 
 ```text
 Decision: BLOCK
@@ -302,17 +458,27 @@ Reason: Unlimited token spending authority
 Next action: Do not sign
 ```
 
+Expected fix result:
+
+```text
+Decision: FIXED
+Replacement targetAddress: 0x4200000000000000000000000000000000000006
+Replacement transactionData: approve(spender, safeAmountRaw)
+Reason: Limited approval reduces spender authority
+```
+
 ---
 
 ## Features
 
 ### CAP Provider Agent
 
-PayGuard exposes CAP compatible capability metadata and an order endpoint.
+PayGuard exposes CAP-compatible capability metadata and paid order endpoints.
 
 ```text
 GET  /api/cap/capability
 POST /api/cap/order
+POST /api/cap/fix-approval
 ```
 
 CAP order responses include:
@@ -323,13 +489,15 @@ Order ID
 Optional escrow ID
 Delivery status
 Paid status
-Risk report
+Risk report or fix report
 Delivery proof
 ```
 
+---
+
 ### CROO WebSocket Provider
 
-PayGuard also includes a CROO SDK provider worker.
+PayGuard includes a CROO SDK provider worker.
 
 ```text
 agent/src/croo-provider.ts
@@ -346,17 +514,20 @@ OrderRejected
 OrderExpired
 ```
 
-On paid orders, it calls:
+On paid orders, it calls one of:
 
 ```text
 POST /api/cap/order
+POST /api/cap/fix-approval
 ```
 
-Then delivers the report back to CROO using:
+Then it delivers the result back to CROO using:
 
 ```text
 client.deliverOrder(...)
 ```
+
+---
 
 ### A2A Callable API
 
@@ -374,6 +545,8 @@ Authenticated endpoints use:
 Authorization: Bearer PAYGUARD_AGENT_API_KEY
 ```
 
+---
+
 ### EVM Calldata Decoder
 
 PayGuard decodes known payment and approval calls.
@@ -386,6 +559,43 @@ setApprovalForAll(address operator, bool approved)
 ```
 
 Unknown calls are still reported with the function selector.
+
+---
+
+### Safe Approval Fix
+
+PayGuard can generate safer replacement calldata for unsafe ERC20 approvals.
+
+Input:
+
+```text
+chain
+tokenAddress
+spenderAddress
+safeAmountRaw
+purpose
+currentTransactionData optional
+walletAddress optional
+```
+
+Output:
+
+```text
+decision: FIXED
+replacement.targetAddress
+replacement.transactionData
+replacement.functionName
+replacement.spenderAddress
+replacement.safeAmountRaw
+whatWasWrong
+whyThisIsDangerous
+whyThisFixIsSafer
+signingInstructions
+verificationChecklist
+deliveryProof
+```
+
+---
 
 ### Live Chain Evidence
 
@@ -400,23 +610,27 @@ ERC20 symbol
 ERC20 decimals
 Wallet token balance
 Current allowance when available
-Read only simulation result
+Read-only simulation result
 ```
+
+---
 
 ### Contract Intelligence
 
-PayGuard checks contract level risk signals.
+PayGuard checks contract-level risk signals.
 
 ```text
-EIP 1967 implementation slot
-EIP 1967 admin slot
-EIP 1967 beacon slot
-ERC 1167 minimal proxy bytecode
+EIP-1967 implementation slot
+EIP-1967 admin slot
+EIP-1967 beacon slot
+ERC-1167 minimal proxy bytecode
 Sourcify verification status
 GoPlus address reputation
 GoPlus token reputation
 Blockscout explorer metadata
 ```
+
+---
 
 ### Policy Scoring
 
@@ -437,6 +651,8 @@ Explorer metadata is available
 
 Critical failures can force a `BLOCK`.
 
+---
+
 ### AI Explanation
 
 When enabled, PayGuard asks Gemini for a structured explanation.
@@ -451,7 +667,11 @@ Agent instruction
 Safer alternative
 ```
 
-If AI is disabled or unavailable, PayGuard still returns the deterministic rule based report.
+AI is enabled for the Full Transaction Risk Scan and disabled for the cheaper Token Approval Scan.
+
+If AI is disabled or unavailable, PayGuard still returns the deterministic rule-based report.
+
+---
 
 ### Delivery Proof
 
@@ -492,6 +712,7 @@ graph TD
 
     subgraph Provider["agent · CROO Provider"]
         WORKER["croo-provider.ts"]
+        ROUTER["Service router"]
         SDK["CROO SDK"]
     end
 
@@ -502,6 +723,7 @@ graph TD
         VERIFY["POST /api/agent/verify-counterparty"]
         CAPABILITY["GET /api/cap/capability"]
         ORDER["POST /api/cap/order"]
+        FIX["POST /api/cap/fix-approval"]
     end
 
     subgraph Core["core · PayGuard Engine"]
@@ -510,6 +732,7 @@ graph TD
         CONTRACT["Contract intelligence"]
         POLICY["Policy checks"]
         SCORE["Risk scoring"]
+        FIXER["Safe approval fix"]
         AI["AI explanation"]
         PROOF["Delivery proof"]
     end
@@ -526,8 +749,11 @@ graph TD
     BUYER --> STORE
     STORE --> WS
     WS --> WORKER
+    WORKER --> ROUTER
+    ROUTER --> ORDER
+    ROUTER --> FIX
     WORKER --> SDK
-    WORKER --> ORDER
+
     BUYER --> MANIFEST
     BUYER --> SCAN
     WALLET --> SCAN
@@ -536,6 +762,7 @@ graph TD
     UI --> SCAN
     SCAN --> DECODER
     ORDER --> DECODER
+    FIX --> FIXER
     VERIFY --> POLICY
 
     DECODER --> EVIDENCE
@@ -544,6 +771,7 @@ graph TD
     POLICY --> SCORE
     SCORE --> AI
     SCORE --> PROOF
+    FIXER --> PROOF
 
     EVIDENCE --> RPC
     CONTRACT --> SOURCIFY
@@ -565,7 +793,15 @@ payguard/
 │   │   ├── client.ts
 │   │   ├── croo-provider.ts
 │   │   ├── index.ts
-│   │   └── remote-demo.ts
+│   │   ├── remote-demo.ts
+│   │   └── croo/
+│   │       ├── env.ts
+│   │       ├── fix-approval.ts
+│   │       ├── handlers.ts
+│   │       ├── input.ts
+│   │       ├── payguard-client.ts
+│   │       ├── reports.ts
+│   │       └── types.ts
 │   ├── package.json
 │   └── tsconfig.json
 │
@@ -605,6 +841,7 @@ payguard/
 │   │   ├── service/
 │   │   │   ├── cap.ts
 │   │   │   ├── counterparty.ts
+│   │   │   ├── fix-approval.ts
 │   │   │   └── response.ts
 │   │   ├── index.ts
 │   │   └── types.ts
@@ -620,7 +857,12 @@ payguard/
 │   │   │   │   └── verify-counterparty/route.ts
 │   │   │   ├── cap/
 │   │   │   │   ├── capability/route.ts
-│   │   │   │   └── order/route.ts
+│   │   │   │   ├── fix-approval/
+│   │   │   │   │   ├── input.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── order/
+│   │   │   │       ├── input.ts
+│   │   │   │       └── route.ts
 │   │   │   └── scan/route.ts
 │   │   ├── scan/page.tsx
 │   │   ├── layout.tsx
@@ -657,6 +899,7 @@ Public manifest endpoint
 CAP capability endpoint
 Authenticated scan endpoint
 Authenticated CAP order endpoint
+Authenticated Safe Approval Fix endpoint
 Authenticated counterparty endpoint
 ```
 
@@ -674,13 +917,14 @@ Contract intelligence
 Policy checks
 Scoring
 AI explanation
+Safe approval fix generation
 CAP proof generation
 Service response creation
 ```
 
 ### `agent`
 
-The agent runtime and proof package.
+The agent runtime and CROO provider.
 
 It provides:
 
@@ -689,7 +933,8 @@ PayGuard API client
 Local service runner
 Remote CAP demo
 CROO WebSocket provider
-End to end verification script
+CROO service routing
+End-to-end verification script
 ```
 
 ---
@@ -697,6 +942,8 @@ End to end verification script
 ## API Reference
 
 Replace `https://YOUR_DEPLOYED_APP_URL` with the deployed app URL.
+
+---
 
 ### Agent Manifest
 
@@ -736,7 +983,9 @@ Public endpoint.
 curl https://YOUR_DEPLOYED_APP_URL/api/cap/capability
 ```
 
-Returns the PayGuard paid capability.
+Returns the PayGuard paid capability metadata.
+
+The default published CAP capability price represents the default Full Transaction Risk Scan:
 
 ```json
 {
@@ -752,12 +1001,20 @@ Returns the PayGuard paid capability.
     "category": "web3_payment_safety",
     "pricing": {
       "model": "fixed",
-      "amount": "0.05",
+      "amount": "0.10",
       "currency": "USDC",
       "network": "base"
     }
   }
 }
+```
+
+CROO Store services may have different prices:
+
+```text
+Token Approval Scan — 0.05 USDC
+Full Transaction Risk Scan — 0.10 USDC
+Safe Approval Fix — 0.50 USDC
 ```
 
 ---
@@ -792,38 +1049,122 @@ curl -X POST https://YOUR_DEPLOYED_APP_URL/api/agent/scan \
 
 ---
 
-### CAP Order
+### CAP Order: Full Transaction Risk Scan
 
 ```text
 POST /api/cap/order
 Authorization: Bearer PAYGUARD_AGENT_API_KEY
 ```
 
-Creates a CAP order style response with the PayGuard report and delivery proof.
-
 ```bash
 curl -X POST https://YOUR_DEPLOYED_APP_URL/api/cap/order \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_AGENT_API_KEY" \
   -d '{
-    "requestId": "cap_order_001",
+    "requestId": "full_scan_001",
     "buyerAgentId": "croo_buyer_agent",
     "sellerAgentId": "croo_seller_agent",
+    "scanMode": "full",
     "action": {
       "chain": "base",
       "walletAddress": "0x0000000000000000000000000000000000000001",
       "targetAddress": "0x4200000000000000000000000000000000000006",
       "transactionData": "0x095ea7b30000000000000000000001111111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "valueWei": "0",
-      "purpose": "CAP paid safety scan before approval"
+      "purpose": "Full risk scan before signing"
     },
     "cap": {
       "orderId": "local_order_001",
       "buyerAddress": "0x0000000000000000000000000000000000000001",
       "paymentTokenAddress": "0x4200000000000000000000000000000000000006",
+      "paymentAmountRaw": "100000"
+    }
+  }'
+```
+
+---
+
+### CAP Order: Token Approval Scan
+
+```text
+POST /api/cap/order
+Authorization: Bearer PAYGUARD_AGENT_API_KEY
+```
+
+```bash
+curl -X POST https://YOUR_DEPLOYED_APP_URL/api/cap/order \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_AGENT_API_KEY" \
+  -d '{
+    "requestId": "approval_scan_001",
+    "buyerAgentId": "croo_buyer_agent",
+    "sellerAgentId": "croo_seller_agent",
+    "scanMode": "approval",
+    "action": {
+      "chain": "base",
+      "walletAddress": "0x0000000000000000000000000000000000000001",
+      "targetAddress": "0x4200000000000000000000000000000000000006",
+      "transactionData": "0x095ea7b30000000000000000000001111111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "valueWei": "0",
+      "purpose": "Check this token approval before signing"
+    },
+    "cap": {
+      "orderId": "local_order_002",
+      "buyerAddress": "0x0000000000000000000000000000000000000001",
+      "paymentTokenAddress": "0x4200000000000000000000000000000000000006",
       "paymentAmountRaw": "50000"
     }
   }'
+```
+
+---
+
+### CAP Order: Safe Approval Fix
+
+```text
+POST /api/cap/fix-approval
+Authorization: Bearer PAYGUARD_AGENT_API_KEY
+```
+
+```bash
+curl -X POST https://YOUR_DEPLOYED_APP_URL/api/cap/fix-approval \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_AGENT_API_KEY" \
+  -d '{
+    "requestId": "safe_approval_fix_001",
+    "buyerAgentId": "croo_buyer_agent",
+    "sellerAgentId": "payguard_provider_agent",
+    "fix": {
+      "chain": "base",
+      "walletAddress": "0x0000000000000000000000000000000000000001",
+      "tokenAddress": "0x4200000000000000000000000000000000000006",
+      "spenderAddress": "0x1111111111111111111111111111111111111111",
+      "safeAmountRaw": "100000000000000000",
+      "currentTransactionData": "0x095ea7b30000000000000000000000001111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "purpose": "Replace unlimited WETH approval with limited approval"
+    },
+    "cap": {
+      "orderId": "local_order_003",
+      "buyerAddress": "0x0000000000000000000000000000000000000001",
+      "paymentTokenAddress": "0x4200000000000000000000000000000000000006",
+      "paymentAmountRaw": "500000"
+    }
+  }'
+```
+
+Expected response includes:
+
+```text
+decision: FIXED
+serviceMode: fix_approval
+replacement.targetAddress
+replacement.transactionData
+whatWasWrong
+whyThisIsDangerous
+whyThisFixIsSafer
+signingInstructions
+verificationChecklist
+deliveryProof
 ```
 
 ---
@@ -853,16 +1194,17 @@ curl -X POST https://YOUR_DEPLOYED_APP_URL/api/agent/verify-counterparty \
 
 ---
 
-## Response Shape
+## Response Shapes
+
+### Scan Response
 
 A successful scan response is designed for both humans and agents.
 
 ```json
 {
-  "ok": true,
   "service": "PayGuard",
   "version": "0.1.0",
-  "requestId": "remote_scan_001",
+  "requestId": "approval_scan_001",
   "buyerAgentId": "croo_buyer_agent",
   "sellerAgentId": "croo_seller_agent",
   "status": "completed",
@@ -881,6 +1223,51 @@ A successful scan response is designed for both humans and agents.
       "unlimited": true
     },
     "nextAction": "Do not sign this action until the requester, spender, and contract behavior are verified."
+  },
+  "cap": {
+    "status": "DELIVERED",
+    "paid": true,
+    "scanMode": "approval"
+  }
+}
+```
+
+---
+
+### Safe Approval Fix Response
+
+```json
+{
+  "service": "PayGuard",
+  "version": "0.1.0",
+  "requestId": "safe_approval_fix_001",
+  "buyerAgentId": "croo_buyer_agent",
+  "sellerAgentId": "payguard_provider_agent",
+  "status": "completed",
+  "canContinue": true,
+  "report": {
+    "scanType": "FIX_UNSAFE_APPROVAL",
+    "decision": "FIXED",
+    "canContinue": true,
+    "riskReduced": true,
+    "summary": "PayGuard generated safer replacement approval calldata using a limited approval amount instead of unlimited token spending authority.",
+    "whatWasWrong": "The original approval appears to grant unlimited token spending authority.",
+    "whyThisIsDangerous": "If the spender address is malicious, compromised, or later upgraded into unsafe behavior, the wallet can lose more tokens than intended because the approval is not limited to this task.",
+    "whyThisFixIsSafer": "The replacement calldata keeps the same token contract and spender but replaces the unlimited approval amount with the requested safeAmountRaw.",
+    "replacement": {
+      "chain": "base",
+      "targetAddress": "0x4200000000000000000000000000000000000006",
+      "transactionData": "0x095ea7b3...",
+      "functionName": "approve",
+      "spenderAddress": "0x1111111111111111111111111111111111111111",
+      "safeAmountRaw": "100000000000000000"
+    },
+    "nextAction": "Use the replacement targetAddress and transactionData for signing instead of the unsafe unlimited approval."
+  },
+  "cap": {
+    "status": "DELIVERED",
+    "paid": true,
+    "serviceMode": "fix_approval"
   }
 }
 ```
@@ -901,7 +1288,7 @@ That is intentional.
 
 PayGuard only reports `paid: true` when a real CROO payment transaction hash is present.
 
-When running through the CROO provider, the provider reads the CROO order metadata and forwards payment data into the PayGuard CAP response.
+When running through the CROO provider, the provider reads CROO order metadata and forwards payment data into the PayGuard CAP response.
 
 Optional local CAP metadata:
 
@@ -944,6 +1331,9 @@ CROO_API_URL=https://api.croo.network
 CROO_WS_URL=wss://api.croo.network/ws
 CROO_API_KEY=replace_with_croo_key
 CROO_SDK_KEY=replace_with_croo_key
+
+CROO_TOKEN_APPROVAL_SERVICE_ID=replace_with_token_approval_service_id
+CROO_FIX_APPROVAL_SERVICE_ID=replace_with_safe_approval_fix_service_id
 
 CROO_CAP_ORDER_ID=
 CROO_ESCROW_ID=
@@ -1017,7 +1407,7 @@ Do not set `PAYGUARD_SERVICE_URL` in Vercel. That variable is used by the provid
 
 ## Render Provider Deployment
 
-Vercel hosts the website and HTTP API. Render can run the long lived CROO provider process.
+Vercel hosts the website and HTTP API. Render runs the long-lived CROO provider process.
 
 Create a Render Background Worker or Web Service with these settings:
 
@@ -1045,7 +1435,12 @@ CROO_API_URL=https://api.croo.network
 CROO_WS_URL=wss://api.croo.network/ws
 CROO_API_KEY=replace_with_croo_key
 CROO_SDK_KEY=replace_with_croo_key
+
+CROO_TOKEN_APPROVAL_SERVICE_ID=replace_with_token_approval_service_id
+CROO_FIX_APPROVAL_SERVICE_ID=replace_with_safe_approval_fix_service_id
 ```
+
+No Render env var is needed for Full Transaction Risk Scan because it is the default service mode.
 
 Expected provider logs:
 
@@ -1139,7 +1534,7 @@ PayGuard remote CAP demo passed.
 | `yarn build:agent`                             | Build the agent package                             |
 | `yarn typecheck`                               | Typecheck core and agent                            |
 | `yarn lint`                                    | Run web lint plus core and agent typechecks         |
-| `yarn fix`                                     | Format and auto fix lint                            |
+| `yarn fix`                                     | Format and auto-fix lint                            |
 | `yarn verify`                                  | Format check, lint, typecheck, and build everything |
 | `yarn verify:remote`                           | Run the remote CAP demo                             |
 | `yarn workspace @payguard/agent croo:provider` | Start the CROO provider worker                      |
@@ -1148,7 +1543,7 @@ PayGuard remote CAP demo passed.
 
 ## CROO Agent Store Listing
 
-### Name
+### Agent Name
 
 ```text
 PayGuard
@@ -1157,57 +1552,145 @@ PayGuard
 ### One Liner
 
 ```text
-Paid before signing safety agent for Web3 agent commerce.
+Paid before-signing safety and approval repair agent for Web3 agent commerce.
 ```
 
-### Description
+### Agent Description
 
 ```text
-PayGuard is a paid before-signing safety agent for Web3 agent commerce.
+PayGuard is a paid before-signing safety and approval repair agent for Web3 agent commerce.
 
 Buyer agents call PayGuard before approving tokens, signing calldata, or paying another agent. PayGuard decodes the transaction, checks live chain evidence, contract verification, reputation signals, simulation result, and policy risk.
 
 It returns a machine-readable ALLOW, WARN, or BLOCK decision with evidence and delivery proof, so the buyer agent knows whether to continue or stop before funds move.
+
+PayGuard also includes Safe Approval Fix, a premium service that converts unsafe or unlimited ERC20 approvals into safer limited approval calldata.
 ```
 
-### Service
+---
+
+### Service 1: Token Approval Scan
 
 ```text
-Before Signing Payment Risk Scan
+Price:
+0.05 USDC
 ```
 
-### Service Description
-
 ```text
-Reviews a proposed EVM transaction or agent payment before signing. PayGuard decodes calldata, checks live chain evidence, contract verification, reputation signals, simulation result, and policy risk, then returns ALLOW, WARN, or BLOCK with delivery proof.
+Description:
+Fast before-signing scan for ERC20 token approvals. PayGuard checks approval calldata, spender address, unlimited approval risk, token metadata, allowance evidence, contract intelligence, and returns ALLOW, WARN, or BLOCK with delivery proof.
 ```
 
-### Requirements
+```text
+Requirements:
+Paste plain text or JSON for a token approval transaction.
+
+Required fields:
+chain: base or ethereum
+walletAddress: wallet preparing to sign
+targetAddress: token contract address
+transactionData: approval calldata starting with 0x
+purpose: why this approval is being requested
+
+Plain text example:
+
+chain: base
+walletAddress: 0x0000000000000000000000000000000000000001
+targetAddress: 0x4200000000000000000000000000000000000006
+transactionData: 0x095ea7b30000000000000000000000001111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+purpose: Check this token approval before signing
+```
 
 ```text
-Provide the transaction to scan before signing.
+Deliverable:
+PayGuard returns a JSON approval risk report with ALLOW, WARN, or BLOCK, decoded approval details, spender risk, allowance evidence, policy checks, contract intelligence, and delivery proof.
+```
+
+---
+
+### Service 2: Full Transaction Risk Scan
+
+```text
+Price:
+0.10 USDC
+```
+
+```text
+Description:
+Full before-signing Web3 transaction risk scan. PayGuard checks calldata, target contract evidence, token behavior, simulation results, reputation signals, AI explanation, and returns ALLOW, WARN, or BLOCK with delivery proof.
+```
+
+```text
+Requirements:
+Paste plain text or JSON for the transaction you want checked before signing.
 
 Required fields:
 chain: base or ethereum
 walletAddress: wallet preparing to sign
 targetAddress: contract or recipient address
 transactionData: calldata starting with 0x
-purpose: why this action is being considered
+purpose: why this transaction is being considered
 
-Agents may send the same fields as JSON.
+Plain text example:
+
+chain: base
+walletAddress: 0x0000000000000000000000000000000000000001
+targetAddress: 0x4200000000000000000000000000000000000006
+transactionData: 0x095ea7b30000000000000000000001111111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+purpose: Check this transaction before signing
 ```
-
-### Deliverable
 
 ```text
-PayGuard returns a JSON risk report with ALLOW, WARN, or BLOCK decision, risk score, decoded action, evidence, next action, and delivery proof.
+Deliverable:
+PayGuard returns a JSON transaction risk report with ALLOW, WARN, or BLOCK, decoded action, chain evidence, policy checks, contract intelligence, AI explanation, and delivery proof.
 ```
 
-### Price
+---
+
+### Service 3: Safe Approval Fix
 
 ```text
-0.05 USDC
+Price:
+0.50 USDC
 ```
+
+```text
+Description:
+PayGuard repairs unsafe ERC20 approval calldata by generating a safer limited-approval replacement. If an approval grants unlimited spending authority, PayGuard returns replacement approve() calldata using the requested safeAmountRaw, explains what was wrong, why the fix is safer, and includes signing instructions plus delivery proof.
+```
+
+```text
+Requirements:
+Paste plain text or JSON for the unsafe approval you want fixed.
+
+Required fields:
+chain: base or ethereum
+tokenAddress: token contract address
+spenderAddress: spender address to approve
+safeAmountRaw: limited approval amount in raw token units
+purpose: why this replacement approval is needed
+
+Optional fields:
+walletAddress: wallet preparing to sign
+currentTransactionData: original unsafe approval calldata
+
+Plain text example:
+
+chain: base
+walletAddress: 0x0000000000000000000000000000000000000001
+tokenAddress: 0x4200000000000000000000000000000000000006
+spenderAddress: 0x1111111111111111111111111111111111111111
+safeAmountRaw: 100000000000000000
+currentTransactionData: 0x095ea7b30000000000000000000000001111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+purpose: Replace unlimited WETH approval with limited approval
+```
+
+```text
+Deliverable:
+PayGuard returns a JSON fix report with decision FIXED, what was wrong, why it was dangerous, why the replacement is safer, replacement targetAddress, replacement transactionData, signing instructions, verification checklist, and delivery proof.
+```
+
+---
 
 ### SLA
 
@@ -1255,6 +1738,9 @@ https://payguard-hack.vercel.app/api/agent/scan
 CAP order:
 https://payguard-hack.vercel.app/api/cap/order
 
+Safe Approval Fix:
+https://payguard-hack.vercel.app/api/cap/fix-approval
+
 Counterparty check:
 https://payguard-hack.vercel.app/api/agent/verify-counterparty
 ```
@@ -1273,21 +1759,26 @@ Use this flow for the demo video.
 5. Run the scan.
 6. Show the BLOCK decision.
 7. Show decoded ERC20 approval and unlimited spending risk.
-8. Open the agent manifest endpoint.
-9. Open the CAP capability endpoint.
-10. Open CROO Agent Store.
-11. Show PayGuard listed as LIVE.
-12. Show the service card: Before Signing Payment Risk Scan.
-13. Show the CROO provider terminal connected.
-14. Explain that the provider listens for CROO orders and delivers PayGuard reports.
-15. Explain that buyer agents stop when PayGuard returns BLOCK.
+8. Explain that PayGuard can also repair unsafe approvals.
+9. Show Safe Approval Fix returning replacement approve() calldata.
+10. Open the agent manifest endpoint.
+11. Open the CAP capability endpoint.
+12. Open CROO Agent Store.
+13. Show PayGuard listed as LIVE.
+14. Show the three paid services:
+    - Token Approval Scan
+    - Full Transaction Risk Scan
+    - Safe Approval Fix
+15. Show the CROO provider terminal connected.
+16. Explain that the provider listens for paid CROO orders and delivers reports.
+17. Explain that buyer agents stop on BLOCK and can use Safe Approval Fix for safer replacement calldata.
 ```
 
 ---
 
 ## Security Model
 
-PayGuard is a pre execution risk analysis tool.
+PayGuard is a pre-execution risk analysis and approval repair tool.
 
 It does not:
 
@@ -1308,7 +1799,8 @@ Review proposed actions before signing
 Decode dangerous approval patterns
 Read live chain evidence
 Check contract verification and reputation
-Return a machine readable decision
+Return machine-readable decisions
+Generate safer limited approval calldata
 Deliver CAP order results through CROO
 Give agents a reason to stop before loss happens
 ```
@@ -1321,6 +1813,7 @@ Agent calls PayGuard
 Agent receives report
 Agent continues only if decision is ALLOW
 Agent pauses or asks for review if decision is WARN or BLOCK
+Agent uses Safe Approval Fix when an unsafe approval should be replaced
 ```
 
 ---
@@ -1332,15 +1825,16 @@ PayGuard is a hackathon implementation and should be treated as an MVP safety ch
 Current limitations:
 
 ```text
-No formal third party security audit
+No formal third-party security audit
 No guaranteed detection of every malicious contract
 No full ABI discovery for arbitrary contracts
 No transaction submission
 No private mempool monitoring
 No fund recovery
-Third party checks depend on RPC, Sourcify, GoPlus, Blockscout, and Gemini availability
+Third-party checks depend on RPC, Sourcify, GoPlus, Blockscout, and Gemini availability
 Paid status depends on CROO payment transaction metadata
-CROO provider must run as a long lived worker to stay online
+CROO provider must run as a long-lived worker to stay online
+Safe Approval Fix generates replacement calldata but does not sign or submit it
 ```
 
 ---
@@ -1350,19 +1844,22 @@ CROO provider must run as a long lived worker to stay online
 1. **Before signing first**  
    The most valuable warning is the one that happens before funds move.
 
-2. **Agent readable by default**  
+2. **Agent-readable by default**  
    Every result must be usable by another autonomous agent.
 
 3. **Clear decisions**  
-   Agents should not parse vague text. They need ALLOW, WARN, or BLOCK.
+   Agents should not parse vague text. They need ALLOW, WARN, BLOCK, or FIXED.
 
-4. **Evidence based reports**  
+4. **Evidence-based reports**  
    Decisions should include decoded calldata, chain evidence, contract intelligence, and policy checks.
 
-5. **Commerce aware**  
-   PayGuard is designed as a paid dependency in agent to agent workflows.
+5. **Repair when possible**  
+   For unsafe approvals, PayGuard can generate safer replacement calldata instead of only warning.
 
-6. **Honest execution**  
+6. **Commerce-aware**  
+   PayGuard is designed as a paid dependency in agent-to-agent workflows.
+
+7. **Honest execution**  
    Local delivery, CROO provider delivery, and real paid settlement are represented separately.
 
 ---
@@ -1380,12 +1877,12 @@ Agent prepares action
         ↓
 PayGuard reviews the action
         ↓
-PayGuard returns ALLOW, WARN, or BLOCK
+PayGuard returns ALLOW, WARN, BLOCK, or FIXED
         ↓
 Agent continues only when safe
 ```
 
-The result is a practical A2A security primitive for autonomous commerce: paid, callable, machine readable, and delivered with proof.
+The result is a practical A2A security primitive for autonomous commerce: paid, callable, machine-readable, repair-capable, and delivered with proof.
 
 ---
 
