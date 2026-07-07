@@ -6,7 +6,7 @@ import type { Event as CrooSdkEvent } from "@croo-network/sdk/dist/types";
 const DEFAULT_BASE_WETH = "0x4200000000000000000000000000000000000006";
 const DEFAULT_DEMO_WALLET = "0x0000000000000000000000000000000000000001";
 const DEFAULT_RISKY_APPROVAL_CALLDATA =
-  "0x095ea7b30000000000000000000001111111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+  "0x095ea7b30000000000000000000000001111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 type CrooEvent = Record<string, unknown>;
 
@@ -76,6 +76,22 @@ function optionalEnv(name: string, fallback: string) {
   return process.env[name]?.trim() || fallback;
 }
 
+function safeJsonParse(value?: string) {
+  if (!value) return undefined;
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function asCrooEvent(event: CrooSdkEvent) {
   const raw = event as unknown;
 
@@ -99,22 +115,6 @@ function eventValue(event: CrooEvent, key: string) {
   const value = event[key];
 
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function safeJsonParse(value?: string) {
-  if (!value) return undefined;
-
-  try {
-    const parsed = JSON.parse(value) as unknown;
-
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as Record<string, unknown>;
-    }
-
-    return undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 function stringValue(value: unknown) {
@@ -152,7 +152,6 @@ function readActionFromText(text?: string): PayGuardAction | undefined {
     !isChain(chain) ||
     !isEvmAddress(walletAddress) ||
     !isEvmAddress(targetAddress) ||
-    !transactionData ||
     !isHexCalldata(transactionData)
   ) {
     return undefined;
@@ -206,7 +205,6 @@ function readActionFromObject(
     !isChain(chain) ||
     !isEvmAddress(walletAddress) ||
     !isEvmAddress(targetAddress) ||
-    !transactionData ||
     !isHexCalldata(transactionData)
   ) {
     return undefined;
@@ -222,18 +220,30 @@ function readActionFromObject(
   };
 }
 
+function getRequirementsSources(negotiation: CrooNegotiation) {
+  const requirementsJson = safeJsonParse(negotiation.requirements);
+  const metadataJson = safeJsonParse(negotiation.metadata);
+
+  return {
+    requirementsJson,
+    metadataJson,
+    requirementsText: negotiation.requirements,
+    metadataText: negotiation.metadata,
+  };
+}
+
 function buildPayGuardRequest(
   order: CrooOrder,
   negotiation: CrooNegotiation,
 ): PayGuardCapRequest {
-  const requirementsJson = safeJsonParse(negotiation.requirements);
-  const metadataJson = safeJsonParse(negotiation.metadata);
+  const { requirementsJson, metadataJson, requirementsText, metadataText } =
+    getRequirementsSources(negotiation);
 
   const action =
     readActionFromObject(requirementsJson) ??
     readActionFromObject(metadataJson) ??
-    readActionFromText(negotiation.requirements) ??
-    readActionFromText(negotiation.metadata);
+    readActionFromText(requirementsText) ??
+    readActionFromText(metadataText);
 
   if (!action) {
     throw new PayGuardInputError(
@@ -281,8 +291,13 @@ function createIncompleteInputReport(
       reason:
         "Expected chain, walletAddress, targetAddress, transactionData, and purpose. transactionData must be calldata starting with 0x.",
       nextAction:
-        "Resubmit the order with valid transaction details, or use the sample format below.",
-      expectedFormat: {
+        "Resubmit with valid transaction details. Plain text and JSON are both supported.",
+      expectedPlainText: `chain: base
+walletAddress: ${DEFAULT_DEMO_WALLET}
+targetAddress: ${DEFAULT_BASE_WETH}
+transactionData: ${DEFAULT_RISKY_APPROVAL_CALLDATA}
+purpose: Check WETH approval before signing`,
+      expectedJson: {
         chain: "base",
         walletAddress: DEFAULT_DEMO_WALLET,
         targetAddress: DEFAULT_BASE_WETH,
@@ -384,9 +399,9 @@ async function handleOrderPaid(client: AgentClient, event: CrooEvent) {
       deliverableText: JSON.stringify(payGuardResponse, null, 2),
     });
 
-    console.log(`Delivered PayGuard report for order: ${orderId}`);
+    console.log(`Delivered PayGuard transaction report for order: ${orderId}`);
   } catch (error) {
-    console.error("PayGuard scan failed; delivering WARN report:", error);
+    console.error("PayGuard failed; delivering WARN report:", error);
 
     const warningReport = createIncompleteInputReport(orderId, error, negotiation);
 
@@ -398,10 +413,10 @@ async function handleOrderPaid(client: AgentClient, event: CrooEvent) {
 
       console.log(`Delivered incomplete-input WARN report for order: ${orderId}`);
     } catch (deliverError) {
-      console.error("Failed to deliver fallback WARN report:", deliverError);
+      console.error("Failed to deliver WARN report:", deliverError);
 
       try {
-        await client.rejectOrder(orderId, "PayGuard failed to deliver the scan.");
+        await client.rejectOrder(orderId, "PayGuard failed to deliver the report.");
       } catch (rejectError) {
         console.error("Failed to reject order after delivery failure:", rejectError);
       }

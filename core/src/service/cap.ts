@@ -80,10 +80,6 @@ function getWarningCap(request: unknown) {
   };
 }
 
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
-}
-
 export async function createCapOrderResponse(
   request: PayGuardCapOrderRequest,
   options: PayGuardScanOptions,

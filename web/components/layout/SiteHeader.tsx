@@ -16,14 +16,14 @@ export function SiteHeader({
       <Logo subtitle={subtitle} />
 
       <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-        <a
+        <Link
           href={CROO_AGENT_URL}
           target="_blank"
           rel="noreferrer"
           className="inline-flex justify-center rounded-full border border-blue/20 bg-blue-soft px-5 py-3 text-sm font-black text-blue transition hover:scale-[1.02]"
         >
           Hire on CROO
-        </a>
+        </Link>
 
         <Link
           href={nav ? "/scan" : "/"}
