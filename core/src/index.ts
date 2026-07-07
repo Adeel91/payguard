@@ -27,6 +27,17 @@ export { PAYGUARD_CAPABILITY, PAYGUARD_CAPABILITY_ID } from "./cap/capability";
 export { createDeliveryProof, hashJson } from "./cap/proof";
 export { createCapOrderResponse, createCapOrderWarningResponse } from "./service/cap";
 
+export {
+  createFixApprovalResponse,
+  createFixApprovalWarningResponse,
+} from "./service/fix-approval";
+
+export type {
+  PayGuardFixApprovalRequest,
+  PayGuardFixApprovalResponse,
+  PayGuardFixApprovalWarningResponse,
+} from "./service/fix-approval";
+
 export type { PayGuardCapOrderRequest, PayGuardCapOrderResponse } from "./service/cap";
 
 export type { PayGuardDeliveryProof } from "./cap/proof";

@@ -6,7 +6,8 @@ import {
   resolveScanMode,
   safeJsonParse,
 } from "./input";
-import { callPayGuard } from "./payguard-client";
+import { buildFixApprovalRequest, isFixApprovalOrder } from "./fix-approval";
+import { callPayGuard, callPayGuardFixApproval } from "./payguard-client";
 import { createIncompleteInputReport } from "./reports";
 import type { CrooEvent, CrooNegotiation, CrooOrder } from "./types";
 
@@ -75,6 +76,22 @@ export async function handleOrderPaid(client: AgentClient, event: CrooSdkEvent) 
     console.log(`CROO service ID: ${getOrderServiceId(order) ?? "unknown"}`);
 
     negotiation = (await client.getNegotiation(order.negotiationId)) as CrooNegotiation;
+
+    if (isFixApprovalOrder(order)) {
+      const fixApprovalRequest = buildFixApprovalRequest(order, negotiation);
+
+      console.log("PayGuard service mode: fix_approval");
+
+      const fixApprovalResponse = await callPayGuardFixApproval(fixApprovalRequest);
+
+      await client.deliverOrder(orderId, {
+        deliverableType: DeliverableType.Text,
+        deliverableText: JSON.stringify(fixApprovalResponse, null, 2),
+      });
+
+      console.log(`Delivered PayGuard fix approval report for order: ${orderId}`);
+      return;
+    }
 
     const payGuardRequest = buildPayGuardRequest(order, negotiation);
 

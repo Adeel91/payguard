@@ -1,5 +1,7 @@
 export type PayGuardScanMode = "full" | "approval";
 
+export type PayGuardServiceMode = PayGuardScanMode | "fix_approval";
+
 export type CrooEvent = Record<string, unknown>;
 
 export type CrooOrder = {
@@ -40,6 +42,31 @@ export type PayGuardCapRequest = {
   sellerAgentId?: string;
   scanMode: PayGuardScanMode;
   action: PayGuardAction;
+  cap: {
+    orderId: string;
+    escrowId?: string;
+    buyerAddress?: string;
+    paymentTokenAddress?: string;
+    paymentAmountRaw?: string;
+    paymentTxHash?: string;
+  };
+};
+
+export type FixApprovalInput = {
+  chain: "base" | "ethereum";
+  walletAddress?: string;
+  tokenAddress: string;
+  spenderAddress: string;
+  safeAmountRaw: string;
+  currentTransactionData?: string;
+  purpose?: string;
+};
+
+export type PayGuardFixApprovalRequest = {
+  requestId: string;
+  buyerAgentId: string;
+  sellerAgentId?: string;
+  fix: FixApprovalInput;
   cap: {
     orderId: string;
     escrowId?: string;
