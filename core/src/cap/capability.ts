@@ -6,10 +6,10 @@ export const PAYGUARD_CAPABILITY = {
   version: "1.0.0",
   category: "web3_payment_safety",
   description:
-    "Paid before signing payment risk scan for autonomous agents. PayGuard reviews calldata, chain evidence, contract intelligence, reputation signals, and returns ALLOW, WARN, or BLOCK.",
+    "Paid before-signing transaction risk scan for autonomous agents. PayGuard reviews calldata, chain evidence, contract intelligence, reputation signals, and returns ALLOW, WARN, or BLOCK.",
   pricing: {
     model: "fixed",
-    amount: "0.05",
+    amount: "0.10",
     currency: "USDC",
     network: "base",
   },

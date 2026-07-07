@@ -2,6 +2,7 @@ import { PAYGUARD_CAPABILITY_ID } from "../cap/capability";
 import { createDeliveryProof } from "../cap/proof";
 import { createServiceResponse } from "./response";
 import type {
+  PayGuardScanMode,
   PayGuardScanOptions,
   PayGuardServiceRequest,
   PayGuardServiceResponse,
@@ -25,6 +26,7 @@ export type PayGuardCapOrderResponse = PayGuardServiceResponse & {
     escrowId?: string;
     status: "DELIVERED" | "DELIVERED_WITH_INPUT_WARNING";
     paid: boolean;
+    scanMode: PayGuardScanMode;
   };
   deliveryProof: ReturnType<typeof createDeliveryProof>;
 };
@@ -44,6 +46,13 @@ function readString(source: Record<string, unknown> | undefined, key: string) {
   const value = source?.[key];
 
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function readScanMode(request: unknown): PayGuardScanMode {
+  const object = asObject(request);
+  const scanMode = readString(object, "scanMode")?.toLowerCase();
+
+  return scanMode === "approval" ? "approval" : "full";
 }
 
 function getWarningRequestId(request: unknown) {
@@ -80,11 +89,71 @@ function getWarningCap(request: unknown) {
   };
 }
 
+function isApprovalAction(report: PayGuardServiceResponse["report"]) {
+  return (
+    report.decodedAction.type === "ERC20_APPROVE" ||
+    report.decodedAction.type === "OPERATOR_APPROVAL"
+  );
+}
+
+function elevateToAtLeastMedium(
+  riskLevel: PayGuardServiceResponse["report"]["riskLevel"],
+) {
+  return riskLevel === "LOW" ? "MEDIUM" : riskLevel;
+}
+
+function applyScanModeRules(
+  serviceResponse: PayGuardServiceResponse,
+  scanMode: PayGuardScanMode,
+): PayGuardServiceResponse {
+  if (scanMode !== "approval" || isApprovalAction(serviceResponse.report)) {
+    return serviceResponse;
+  }
+
+  const approvalScopeCheck: PayGuardServiceResponse["report"]["policyChecks"][number] = {
+    id: "approval_scan_scope",
+    title: "Transaction matches Token Approval Scan scope",
+    passed: false,
+    severity: "MEDIUM",
+    evidence:
+      "Token Approval Scan is intended for approve() or setApprovalForAll() actions. Use Full Transaction Risk Scan for this transaction type.",
+  };
+
+  const reasons = Array.from(
+    new Set([
+      ...serviceResponse.report.reasons,
+      "This is not a token approval transaction. Use Full Transaction Risk Scan for non-approval calldata.",
+    ]),
+  );
+
+  const report: PayGuardServiceResponse["report"] = {
+    ...serviceResponse.report,
+    decision: serviceResponse.report.decision === "BLOCK" ? "BLOCK" : "WARN",
+    canContinue: false,
+    riskScore: Math.max(serviceResponse.report.riskScore, 60),
+    riskLevel: elevateToAtLeastMedium(serviceResponse.report.riskLevel),
+    summary:
+      "Token Approval Scan received a non-approval transaction. PayGuard completed the scan but recommends using Full Transaction Risk Scan for this calldata.",
+    policyChecks: [...serviceResponse.report.policyChecks, approvalScopeCheck],
+    reasons,
+    nextAction:
+      "Use Full Transaction Risk Scan for non-approval calldata, transfers, payments, or unknown contract calls.",
+  };
+
+  return {
+    ...serviceResponse,
+    canContinue: false,
+    report,
+  };
+}
+
 export async function createCapOrderResponse(
   request: PayGuardCapOrderRequest,
   options: PayGuardScanOptions,
 ): Promise<PayGuardCapOrderResponse> {
-  const serviceResponse = await createServiceResponse(request, options);
+  const scanMode = request.scanMode === "approval" ? "approval" : "full";
+  const rawServiceResponse = await createServiceResponse(request, options);
+  const serviceResponse = applyScanModeRules(rawServiceResponse, scanMode);
 
   const output = {
     decision: serviceResponse.report.decision,
@@ -114,6 +183,7 @@ export async function createCapOrderResponse(
       escrowId,
       status: "DELIVERED",
       paid: Boolean(paymentTxHash || orderId),
+      scanMode,
     },
   };
 }
@@ -122,12 +192,15 @@ export function createCapOrderWarningResponse(
   request: unknown,
   error: unknown,
 ): PayGuardCapOrderResponse {
+  void error;
+
   const requestId = getWarningRequestId(request);
   const buyerAgentId = getWarningBuyerAgentId(request);
   const sellerAgentId = getWarningSellerAgentId(request);
   const cap = getWarningCap(request);
   const orderId = cap.orderId ?? requestId;
   const checkedAt = new Date().toISOString();
+  const scanMode = readScanMode(request);
 
   const report = {
     scanId: `pg_incomplete_${requestId}`,
@@ -278,6 +351,7 @@ export function createCapOrderWarningResponse(
       escrowId: cap.escrowId,
       status: "DELIVERED_WITH_INPUT_WARNING",
       paid: Boolean(cap.paymentTxHash || orderId),
+      scanMode,
     },
   };
 }

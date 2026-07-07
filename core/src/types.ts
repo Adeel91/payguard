@@ -9,6 +9,8 @@ export type PayGuardChain = "base" | "ethereum";
 
 export type ProxyType = "NONE" | "EIP1967" | "BEACON" | "EIP1167_MINIMAL" | "UNKNOWN";
 
+export type PayGuardScanMode = "full" | "approval";
+
 export type PayGuardScanInput = {
   chain: PayGuardChain;
   walletAddress: Address;
@@ -179,6 +181,7 @@ export type PayGuardServiceRequest = {
   requestId: string;
   buyerAgentId: string;
   sellerAgentId?: string;
+  scanMode?: PayGuardScanMode;
   action: PayGuardScanInput;
 };
 

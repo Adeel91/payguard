@@ -6,7 +6,9 @@ import type { Event as CrooSdkEvent } from "@croo-network/sdk/dist/types";
 const DEFAULT_BASE_WETH = "0x4200000000000000000000000000000000000006";
 const DEFAULT_DEMO_WALLET = "0x0000000000000000000000000000000000000001";
 const DEFAULT_RISKY_APPROVAL_CALLDATA =
-  "0x095ea7b30000000000000000000000001111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+  "0x095ea7b30000000000000000000001111111111111111111111111111111111111111111ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+type PayGuardScanMode = "full" | "approval";
 
 type CrooEvent = Record<string, unknown>;
 
@@ -21,6 +23,8 @@ type CrooOrder = {
   price?: string;
   paymentToken?: string;
   payTxHash?: string;
+  serviceId?: string;
+  service_id?: string;
 };
 
 type CrooNegotiation = {
@@ -44,6 +48,7 @@ type PayGuardCapRequest = {
   requestId: string;
   buyerAgentId: string;
   sellerAgentId?: string;
+  scanMode: PayGuardScanMode;
   action: PayGuardAction;
   cap: {
     orderId: string;
@@ -131,6 +136,21 @@ function isEvmAddress(value: unknown): value is string {
 
 function isHexCalldata(value: unknown): value is string {
   return typeof value === "string" && /^0x[0-9a-fA-F]*$/.test(value);
+}
+
+function getOrderServiceId(order: CrooOrder) {
+  return order.serviceId ?? order.service_id;
+}
+
+function resolveScanMode(order: CrooOrder): PayGuardScanMode {
+  const tokenApprovalServiceId = process.env.CROO_TOKEN_APPROVAL_SERVICE_ID?.trim();
+  const orderServiceId = getOrderServiceId(order);
+
+  if (tokenApprovalServiceId && orderServiceId === tokenApprovalServiceId) {
+    return "approval";
+  }
+
+  return "full";
 }
 
 function readActionFromText(text?: string): PayGuardAction | undefined {
@@ -257,6 +277,7 @@ function buildPayGuardRequest(
       order.requesterAgentId ?? negotiation.requesterAgentId ?? "croo_requester_agent",
     sellerAgentId:
       order.providerAgentId ?? negotiation.providerAgentId ?? "payguard_provider_agent",
+    scanMode: resolveScanMode(order),
     action,
     cap: {
       orderId: order.orderId,
@@ -273,6 +294,7 @@ function createIncompleteInputReport(
   orderId: string,
   error: unknown,
   negotiation?: CrooNegotiation,
+  scanMode: PayGuardScanMode = "full",
 ) {
   return {
     service: "PayGuard",
@@ -315,6 +337,7 @@ purpose: Check WETH approval before signing`,
       orderId,
       status: "DELIVERED_WITH_INPUT_WARNING",
       paid: true,
+      scanMode,
     },
   };
 }
@@ -382,16 +405,22 @@ async function handleOrderPaid(client: AgentClient, event: CrooEvent) {
     return;
   }
 
+  let order: CrooOrder | undefined;
   let negotiation: CrooNegotiation | undefined;
 
   try {
     console.log(`Paid order received: ${orderId}`);
 
-    const order = (await client.getOrder(orderId)) as CrooOrder;
+    order = (await client.getOrder(orderId)) as CrooOrder;
+
+    console.log(`CROO service ID: ${getOrderServiceId(order) ?? "unknown"}`);
 
     negotiation = (await client.getNegotiation(order.negotiationId)) as CrooNegotiation;
 
     const payGuardRequest = buildPayGuardRequest(order, negotiation);
+
+    console.log(`PayGuard scan mode: ${payGuardRequest.scanMode}`);
+
     const payGuardResponse = await callPayGuard(payGuardRequest);
 
     await client.deliverOrder(orderId, {
@@ -403,7 +432,12 @@ async function handleOrderPaid(client: AgentClient, event: CrooEvent) {
   } catch (error) {
     console.error("PayGuard failed; delivering WARN report:", error);
 
-    const warningReport = createIncompleteInputReport(orderId, error, negotiation);
+    const warningReport = createIncompleteInputReport(
+      orderId,
+      error,
+      negotiation,
+      order ? resolveScanMode(order) : "full",
+    );
 
     try {
       await client.deliverOrder(orderId, {

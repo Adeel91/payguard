@@ -48,6 +48,7 @@ export type {
   PayGuardReport,
   PayGuardRiskLevel,
   PayGuardScanInput,
+  PayGuardScanMode,
   PayGuardScanOptions,
   PayGuardServiceRequest,
   PayGuardServiceResponse,
